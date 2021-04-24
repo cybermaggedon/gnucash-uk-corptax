@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import xml.etree.ElementTree as ET
+import irmark
+
+doc = ET.parse("can.xml")
+
+i = irmark.compute(ET.tostring(doc.getroot()))
+
+print(i)
+

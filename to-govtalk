@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+
+import xml.dom.minidom
+import xml.dom
+import datetime
+import lxml.etree as ET
+import hashlib
+import base64
+
+comps = xml.dom.minidom.parse("ct600.html")
+
+def examine(elt, res):
+    if len(elt.childNodes) > 1: return
+    if elt.firstChild.nodeType != xml.dom.Node.TEXT_NODE: return
+
+    name = elt.getAttribute("name")
+    value = elt.firstChild.data
+
+    res[name] = value
+
+def get_entity_id(elt):
+    for e1 in elt.getElementsByTagName("xbrli:entity"):
+        for e2 in elt.getElementsByTagName("xbrli:identifier"):
+            return e2.firstChild.data
+    return None
+    
+def mooch(node, res):
+
+    if node.nodeName == "ix:nonNumeric":
+        examine(node, res)
+
+    # Horrific.  It's not in the schema.  It can be found in contexts.
+    if node.nodeName == "xbrli:context":
+        if "company-number" not in res:
+            id = get_entity_id(node)
+            if id:
+                # This doesn't fit in with how we're using res, but...
+                # whatever.
+                res["company-number"] = id
+
+    if node.nodeName == "ix:nonFraction":
+        examine(node, res)
+
+    for elt in node.childNodes:
+        if elt.nodeType == xml.dom.Node.ELEMENT_NODE:
+            mooch(elt, res)
+
+res = {}
+
+mooch(comps.documentElement, res)
+
+class CT:
+    def __init__(self):
+        impl = xml.dom.minidom.getDOMImplementation()
+        self.doc = impl.createDocument(None, "GovTalkMessage", None)
+        self.root = self.doc.documentElement
+
+    def toxml(self):
+        return self.doc.toprettyxml()
+
+    @staticmethod
+    def load(data, comps):
+        ct = CT()
+        ct.data = data
+        ct.comps = comps
+        ct.initialise()
+        return ct
+
+    def element(self, name, value=None, attrs={}):
+        elt = self.doc.createElement(name)
+        for k, v in attrs.items():
+            elt.setAttribute(k, v)
+        if value:
+            self.do_add(elt, value)
+
+        return elt
+
+    def add(self, par, name, value):
+        elt = self.doc.createElement(name)
+        par.appendChild(elt)
+        self.do_add(elt, value)
+
+    def do_add(self, elt, value):
+
+        if isinstance(value, str):
+            elt.appendChild(self.doc.createTextNode(value))
+            return
+
+        if isinstance(value, dict):
+            for k, v in value.items():
+                if k == None:
+                    elt.appendChild(v)
+                else:
+                    self.add(elt, k, v)
+            return
+
+        if isinstance(value, list):
+            for v in value:
+                elt.appendChild(v)
+            return
+
+        elt.appendChild(value)
+        return
+
+    # XBRL date in English form cvt to ISO
+    def to_date(self, d):
+        d = datetime.datetime.strptime(d, "%d %B %Y").date()
+        return str(d)
+
+    def init_message_details(self, par):
+
+        self.add(par, "MessageDetails", {
+            "Class": "HMRC-CT-CT600",
+            "Qualifier": "request",
+            "Function": "submit",
+            "CorrelationID": "",
+            "Transformation": "XML",
+            "GatewayTest": "FIXME"
+        })
+
+    def init_sender_details(self, par):
+
+        self.add(par, "SenderDetails", {
+            "IDAuthentication": {
+                "SenderID": "FIXME-user",
+                "Authentication": {
+                    "Method": "clear",
+                    "Role": "principal",
+                    "Value": "FIXME-password-value"
+                }
+            }
+        })
+
+    def init_header(self, par):
+        header = self.doc.createElement("Header")
+        par.appendChild(header)
+        self.init_message_details(header)
+        self.init_sender_details(header)
+
+    def init_govtalk(self, par):
+
+        self.add(par, "GovTalkDetails", {
+            "Keys": self.element("Key", self.data["ct-comp:TaxReference"],
+                                 {"Type": "UTR"}),
+            "TargetDetails": {
+                "Organisation": "HMRC"
+            },
+            "ChannelRouting": {
+                "Channel": {
+                    "URI": "FIXME - Enter your 4 digit vendor ID",
+                    "Product": self.data["ct-comp:NameOfProductionSoftware"],
+                    "Version": self.data["ct-comp:VersionOfProductionSoftware"]
+                }
+            }
+        })
+
+    def ir_header(self):
+
+        return self.element("IRheader", {
+            "Keys": self.element("Key", self.data["ct-comp:TaxReference"],
+                                 {"Type": "UTR"}),
+            "PeriodEnd": self.to_date(
+                self.data["ct-comp:EndOfPeriodCoveredByReturn"]
+            ),
+            "DefaultCurrency": "GBP",
+	    "Manifest": {
+                "Contains": {
+                    "Reference": {
+			"Namespace": "http://www.govtalk.gov.uk/taxation/CT/5",
+			"SchemaVersion": "FIXME-what-is-it",
+			"TopElementName": "CompanyTaxReturn"
+                    }
+                }
+            },
+            None: self.element("IRmark", "FIXME_Enter relevant IRmark here",
+                               {"Type": "generic"}),
+            "Sender": "Company"
+        })
+
+    def tax_return(self):
+
+        p_from = self.to_date(self.data["ct-comp:StartOfPeriodCoveredByReturn"])
+        p_to = self.to_date(self.data["ct-comp:EndOfPeriodCoveredByReturn"])
+
+        return self.element(
+            "CompanyTaxReturn", attrs={"ReturnType": "new"},
+            value=[
+                self.element("CompanyInformation", {
+                    "CompanyName": self.data["ct-comp:CompanyName"],
+                    "RegistrationNumber": self.data["company-number"],
+                    "Reference": self.data["ct-comp:TaxReference"],
+                    "CompanyType": "FIXME - 6",
+                    "PeriodCovered": {
+                        "From": p_from,
+                        "To": p_to
+                    }
+                }),
+                self.element("ReturnInfoSummary", {
+                    "Computations": {
+                        "ThisPeriodComputations": "yes"
+                    }
+                }),
+                self.element("CompanyTaxCalculation", {
+                    "Income": {
+                        "TradingAndProfessional": {
+                            "Profits": self.data["ct-comp:AdjustedTradingProfitOfThisPeriod"],
+                            "NetProfits":  self.data["ct-comp:NetTradingProfits"],
+                        },
+                        "NonTradingLoanProfitsAndGains": "0"
+                    },
+                    "ProfitsBeforeOtherDeductions": self.data["ct-comp:ProfitsBeforeOtherDeductionsAndReliefs"],
+                    "ChargesAndReliefs": {
+                        "ProfitsBeforeCharges": self.data["ct-comp:ProfitsBeforeChargesAndGroupRelief"]
+                    },
+                    "ChargeableProfits": self.data["ct-comp:TotalProfitsChargeableToCorporationTax"],
+                    "TaxCalculation": {
+                        "AssociatedCompanies": {
+                            "ThisPeriod": "0"
+                        },
+                        "StartingOrSmallCompaniesRate": "yes"
+                    },
+                    "CorporationTaxChargeable": {
+                        "FinancialYearOne": {
+                            "Year": self.data["ct-comp:FinancialYear1CoveredByTheReturn"],
+                            "Details": {
+                                "Profit": self.data["ct-comp:FY1AmountOfProfitChargeableAtFirstRate"],
+                                "TaxRate": self.data["ct-comp:FY1FirstRateOfTax"],
+                                "Tax": self.data["ct-comp:FY1TaxAtFirstRate"]
+                            }
+                        },
+                        "FinancialYearTwo": {
+                            "Year": self.data["ct-comp:FinancialYear2CoveredByTheReturn"],
+                            "Details": {
+                                "Profit": self.data["ct-comp:FY2AmountOfProfitChargeableAtFirstRate"],
+                                "TaxRate": self.data["ct-comp:FY2FirstRateOfTax"],
+                                "Tax": self.data["ct-comp:FY2TaxAtFirstRate"]
+                            }
+                        }
+                    },
+                    "TotalChargeableCorporationTax": self.data["ct-comp:CorporationTaxChargeable"],
+                    "FurtherTaxCalculations": {
+                        "MarginalRateRelief": self.data["ct-comp:MarginalRateReliefForRingFenceTradesPayable"],
+                        "CTNetOfMRR": "0"
+                    },
+                    "NetCorporationTaxChargeable": self.data["ct-comp:CorporationTaxChargeable"],
+                    "NetCorporationTaxLiability":  self.data["ct-comp:NetCorporationTaxPayable"],
+                    "TaxChargeable": self.data["ct-comp:TaxChargeable"],
+                    "TaxPayable": self.data["ct-comp:TaxPayable"]
+                }),
+                self.element("OverpaymentsAndRepayments", {
+                    "SmallRepayments": {
+                        "NoRepayments20OrLess": "no"
+                    }
+                }),
+                self.element("Declaration", {
+                    "AcceptDeclaration": "yes",
+                    "Name": "Bunchy O'Hare",
+                    "Status": "Director"
+                }),
+                self.element("AttachedFiles", {
+                    "XBRLsubmission": {
+                        "Computation": {
+                            "Instance": self.ixbrl()
+
+                        }
+                    }
+                })
+            ]
+        )
+
+    def ixbrl(self):
+
+        # elt = self.doc.createElement("InlineXBRLDocument")
+
+        # html = self.doc.createElement("html")
+        # elt.appendChild(html)
+
+        # attrs = self.comps.documentElement.attributes
+        # for i in range(0, attrs.length):
+        #     attr = attrs.item(i)
+        #     html.setAttribute(attr.name, attr.value)
+
+        # i_elts = [v for v in self.comps.documentElement.childNodes]
+        # for e2 in i_elts:
+        #     e2.parentNode.removeChild(e2)
+        #     html.appendChild(e2)
+
+        # return elt
+
+        elt = self.doc.createElement("EncodedInlineXBRLDocument")
+        doc = base64.b64encode(self.comps.toxml().encode("utf-8"))
+        elt.appendChild(self.doc.createTextNode(doc.decode("utf-8")))
+        return elt
+                       
+    def ir_envelope(self):
+        return self.element("IRenvelope", [
+            self.ir_header(),
+            self.tax_return()
+        ])
+
+    def init_body(self, par):
+        self.add(par, "Body", self.ir_envelope())
+        
+    def initialise(self):
+        self.add(self.root, "EnvelopeVersion", "2.0")
+        self.init_header(self.root)
+        self.init_govtalk(self.root)
+        self.init_body(self.root)
+
+        irmark = self.irmark()
+
+        for elt in self.doc.getElementsByTagName("IRmark"):
+            while elt.firstChild:
+                elt.removeChild(elt.firstChild)
+            elt.appendChild(self.doc.createTextNode(irmark))
+        
+
+    def irmark(self):
+
+        doc = self.doc
+        root = doc.documentElement
+        body = doc.getElementsByTagName("Body")
+
+        if len(body) != 1:
+            raise RuntimeError("Expecting 1 body")
+
+        # Take a copy of the body
+        body = body[0].cloneNode(deep=True)
+
+        # Put all xmlns... attributes on body from root.
+        attrs = root.attributes
+        for i in range(0, attrs.length):
+            attr = attrs.item(i)
+
+            if attr.name.startswith("xmlns"):
+                body.setAttribute(attr.name, attr.value)
+
+        # Remove IRmark
+        irmark = body.getElementsByTagName("IRmark")[0]
+        irmark.parentNode.removeChild(irmark)
+
+        raw = body.toxml()
+
+        et = ET.fromstring(raw)
+        canon = ET.tostring(et, method="c14n")
+
+        shasum = hashlib.sha1(canon).digest()
+
+        return base64.b64encode(shasum).decode("utf-8")
+
+ct = CT.load(res, comps)
+#s = doc.toxml()
+#print(s)
+#print(ct.irmark())
+
+s = ct.toxml()
+print(s)
+

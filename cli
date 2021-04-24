@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+
+local = "http://localhost:8081/"
+tpvs = "https://www.tpvs.hmrc.gov.uk/HMRC/CT600"
+ets = "https://test-transaction-engine.tax.service.gov.uk/submission"
+
+params = {
+    "company-type": 6,
+    "declaration-name": "Bunchy O'Hare",
+    "declaration-status": "Director",
+    "username": "CTUser100",
+    "password": "password",
+    "gateway-test": "1",
+    "tax-reference": "1234123412",
+    "vendor-id": "1234",
+    "software": "gnucash-uk-corptax",
+    "software-version": "0.0.1",
+    "url": local,
+    "title": "Ms",
+    "first-name": "Sarah",
+    "second-name": "McAcre",
+    "email": "sarah@example.org",
+    "phone": "447900123456"
+}
+
+############################################################################
+
+from govtalk import *
+from corptax import to_return, ct_ns
+import xml.etree.ElementTree as ET
+
+import asyncio
+import aiohttp
+import time
+import xml.dom.minidom
+import sys
+
+if len(sys.argv) != 3:
+    print("Usage:\n\tcli <accts> <comps>\n")
+    sys.exit(1)
+
+comps = open(sys.argv[2]).read()
+accts = open(sys.argv[1]).read()
+
+ret = to_return(comps, accts, params)
+
+utr = ret.find(".//{%s}Reference" % ct_ns).text
+
+req = GovTalkSubmissionRequest({
+    "username": params["username"],
+    "password": params["password"],
+    "class": "HMRC-CT-CT600",
+    "gateway-test": params["gateway-test"],
+    "tax-reference": utr,
+    "vendor-id": params["vendor-id"],
+    "software": params["software"],
+    "software-version": params["software-version"],
+    "ir-envelope": ret.getroot()
+})
+
+print("IRmark is", req.get_irmark())
+
+req.add_irmark()
+
+async def call(req, ep):
+
+    async with aiohttp.ClientSession() as session:
+
+        data = req.toxml()
+
+        async with session.post(ep, data=data) as resp:
+            if resp.status != 200:
+                raise RuntimeError(
+                    "Transaction failed: status=%d" % resp.status
+                )
+            data = await resp.text()
+
+            msg = GovTalkMessage.decode(data)
+
+            if isinstance(msg, GovTalkSubmissionError):
+                raise RuntimeError(msg.get("error-text"))
+
+            return msg
+
+async def submit(req):
+
+    resp = await call(req, params["url"])
+
+    correlation_id = resp.get("correlation-id")
+    endpoint = resp.get("response-endpoint")
+    poll = float(resp.get("poll-interval"))
+
+    print("Correlation ID is", correlation_id)
+    print("Endpoint is", endpoint)
+    print("Poll time is", poll)
+
+    timeout = time.time() + 20
+    
+    while True:
+
+        if time.time() > timeout:
+            raise RuntimeError("Timeout waiting for valid response.")
+
+        await asyncio.sleep(poll)
+
+        req = GovTalkSubmissionPoll({
+	    "username": params["username"],
+	    "password": params["password"],
+	    "class": "HMRC-CT-CT600",
+	    "gateway-test": params["gateway-test"],
+            "correlation-id": correlation_id
+        })
+
+        print("Poll...")
+        resp = await call(req, endpoint)
+
+        correlation_id = resp.get("correlation-id")
+        endpoint = resp.get("response-endpoint")
+        poll = float(resp.get("poll-interval"))
+
+        if isinstance(resp, GovTalkSubmissionResponse):
+            break
+
+    print("Submitted successfully.")
+
+    req = GovTalkDeleteRequest({
+	"username": params["username"],
+	"password": params["password"],
+	"class": "HMRC-CT-CT600",
+	"gateway-test": params["gateway-test"],
+        "correlation-id": correlation_id
+    })
+
+    print("Delete request...")
+    resp = await call(req, endpoint)
+
+    print("Completed.")
+
+try:
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(submit(req))
+except Exception as e:
+    print("Exception:", str(e))
+

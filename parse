@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import io
+
+from corptaxreturn import to_return
+
+comps = open("ct600.html").read()
+accts = open("accts.html").read()
+
+ct = to_return(comps, accts)
+
+def pretty_print(current, parent=None, index=-1, depth=0):
+    for i, node in enumerate(current):
+        pretty_print(node, current, i, depth + 1)
+    if parent is not None:
+        if index == 0:
+            parent.text = '\n' + ('\t' * depth)
+        else:
+            parent[index - 1].tail = '\n' + ('\t' * depth)
+        if index == len(parent) - 1:
+            current.tail = '\n' + ('\t' * (depth - 1))
+
+pretty_print(ct.getroot())
+
+buf = io.BytesIO()
+ct.write(buf)
+print(buf.getvalue().decode("utf-8"))
+
