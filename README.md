@@ -4,7 +4,7 @@
 ## Introduction
 
 This is a utility which takes a UK corporation tax return formatted using
-[https://github.com/cybermaggedon/gnucash-ixbrl](`gnucash-ixbrl`) and
+[`gnucash-ixbrl`](https://github.com/cybermaggedon/gnucash-ixbrl) and
 submits in accordance with the HMRC Corporation Tax filing API.
 
 `gnucash-uk-corptax` presently understands a small subset of the corporation
@@ -58,6 +58,9 @@ Submitted successfully.
 Delete request...
 Completed.
 ```
+
+The two files `accts.html` and `ct600.html` included in this repo
+are sample accounts which were output from `gnucash-ixbrl`.
 
 ## Usage
 
