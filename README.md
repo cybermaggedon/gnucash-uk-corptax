@@ -41,7 +41,7 @@ corptax-test-service
 To submit the test account data to the test service:
 
 ```
-gnucash-uk-corptax config.json accts.html ct600.html
+gnucash-uk-corptax -c config.json -a accts.html -t ct600.html
 ```
 
 Output should look like this:
@@ -64,8 +64,24 @@ are sample accounts which were output from `gnucash-ixbrl`.
 
 ## Usage
 
-`gnucash-uk-corptax` takes 3 parameters.  The first is a configuration file
-which should look like this:
+```
+usage: gnucash-uk-corptax [-h] [--config CONFIG] --accounts ACCOUNTS
+                          --computations COMPUTATIONS [--show-ct]
+
+Submittion to HMRC Corporation Tax API
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG, -c CONFIG
+                        Configuration file (default: config.json)
+  --accounts ACCOUNTS, -a ACCOUNTS
+                        Company accounts iXBRL file
+  --computations COMPUTATIONS, --ct600 COMPUTATIONS, -t COMPUTATIONS
+                        Corporation tax computations iXBRL file
+  --show-ct, -p         Just output submission message, without submit step
+```
+
+The configuration file is a JSON file, should look something like this:
 
 ```
 {
@@ -88,8 +104,8 @@ which should look like this:
 }
 ```
 
-The second is an iXBRL-formatted company accounts file.  The third
-is iXBRL-formatted corporation tax computations.
+The accounts file is an iXBRL-formatted company accounts file.  The
+computations file is an iXBRL-formatted corporation tax computations.
 
 Corporation tax data is read from the corporation tax computations, and
 used to construct the GovTalkMessage containing corporation tax submission

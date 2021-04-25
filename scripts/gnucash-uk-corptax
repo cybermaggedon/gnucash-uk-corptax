@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-#local = "http://localhost:8081/"
-#tpvs = "https://www.tpvs.hmrc.gov.uk/HMRC/CT600"
-#ets = "https://test-transaction-engine.tax.service.gov.uk/submission"
-
-############################################################################
-
 from gnucash_uk_corptax.govtalk import *
 from gnucash_uk_corptax.corptax import *
 
@@ -15,17 +9,113 @@ import aiohttp
 import time
 import xml.dom.minidom
 import sys
+import argparse
 import json
 
-if len(sys.argv) != 4:
-    print("Usage:\n\tcli <config> <accts> <comps>\n")
+# Command-line argument parser
+parser = argparse.ArgumentParser(
+    description="Submittion to HMRC Corporation Tax API"
+)
+parser.add_argument('--config', '-c',
+		    default='config.json',
+                    help='Configuration file (default: config.json)')
+parser.add_argument('--accounts', '-a', required=True,
+                    help='Company accounts iXBRL file')
+parser.add_argument('--computations', '--ct600', '-t', required=True,
+                    help='Corporation tax computations iXBRL file')
+parser.add_argument('--show-ct', '-p',
+                    action="store_true", default=False,
+                    help='Just output submission message, without submit step')
+
+# Parse arguments
+args = parser.parse_args(sys.argv[1:])
+
+# Load config
+params = json.loads(open(args.config).read())
+
+try:
+    accts = open(args.accounts).read()
+except Exception as e:
+    sys.stderr.write("Could not read accounts file: %s\n" % str(e))
     sys.exit(1)
 
-params = json.loads(open(sys.argv[1]).read())
-accts = open(sys.argv[2]).read()
-comps = open(sys.argv[3]).read()
+try:
+    comps = open(args.computations).read()
+except Exception as e:
+    sys.stderr.write("Could not read computations file: %s\n" % str(e))
+    sys.exit(1)
+
+# Sanity check on inputs, correct schemas in use?
+
+def get_schema(file):
+    doc = ET.parse(file)
+
+    schema=set()
+    for elt in doc.findall(".//ix:references/link:schemaRef", {
+            "link": "http://www.xbrl.org/2003/linkbase",
+            "xlink": "http://www.w3.org/1999/xlink",
+            "ix": "http://www.xbrl.org/2013/inlineXBRL"
+    }):
+        schema.add(elt.get("{%s}href" % "http://www.w3.org/1999/xlink"))
+
+    return schema
+
+schema = get_schema(args.accounts)
+found_frc=False
+found_dpl=False
+found_ct=False
+
+for s in schema:
+    if s.startswith("https://xbrl.frc.org.uk/FRS-"):
+        found_frc = True
+    if s.startswith("http://www.hmrc.gov.uk/schemas/ct/dpl/"):
+        found_dpl = True
+
+schema = get_schema(args.computations)
+
+for s in schema:
+    if s.startswith("http://www.hmrc.gov.uk/schemas/ct/comp/"):
+        found_ct = True
+    if s.startswith("http://www.hmrc.gov.uk/schemas/ct/dpl/"):
+        found_dpl = True
+
+if not found_dpl:
+    sys.stderr.write("No DPL schema present in either file!\n")
+    sys.stderr.write(
+        "One of the files should contain detailed profit-and-loss statement.\n")
+    sys.exit(1)
+
+if not found_frc:
+    sys.stderr.write("No FRS schema present in company accounts!\n")
+    sys.stderr.write("Is it a company accounts file?\n")
+    sys.exit(1)
+
+if not found_ct:
+    sys.stderr.write("No CT schema present in computations file!\n")
+    sys.stderr.write("Is it a corporation tax computations file?\n")
+    sys.exit(1)
 
 ret = to_return(comps, accts, params)
+
+utr = ret.find(".//{%s}Reference" % ct_ns).text
+
+if args.show_ct:
+
+    req = GovTalkSubmissionRequest({
+        "username": params["username"],
+        "password": params["password"],
+        "class": "HMRC-CT-CT600",
+        "gateway-test": params["gateway-test"],
+        "tax-reference": utr,
+        "vendor-id": params["vendor-id"],
+        "software": params["software"],
+        "software-version": params["software-version"],
+        "ir-envelope": ret.getroot()
+    })
+
+    print(req.toprettyxml())
+
+    sys.exit(0)
 
 utr = ret.find(".//{%s}Reference" % ct_ns).text
 
