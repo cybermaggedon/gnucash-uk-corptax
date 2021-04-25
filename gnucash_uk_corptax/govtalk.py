@@ -12,6 +12,7 @@ import sys
 env_ns = "http://www.govtalk.gov.uk/CM/envelope"
 ET.register_namespace("", env_ns)
 
+
 e_GovTalkMessage = "{%s}GovTalkMessage" % env_ns
 e_Header = "{%s}Header" % env_ns
 e_MessageDetails = "{%s}MessageDetails" % env_ns
@@ -52,6 +53,10 @@ ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 ct_IRenvelope = "{%s}IRenvelope" % ct_ns
 ct_IRmark = "{%s}IRmark" % ct_ns
 ct_IRheader = "{%s}IRheader" % ct_ns
+
+sr_ns = "http://www.inlandrevenue.gov.uk/SuccessResponse"
+sr_SuccessResponse = "{%s}SuccessResponse" % sr_ns
+sr_Message = "{%s}Message" % sr_ns
 
 ET.register_namespace("ct", "http://www.govtalk.gov.uk/taxation/CT/5")
 
@@ -533,6 +538,10 @@ class GovTalkSubmissionResponse(GovTalkMessage):
         self.params["poll-interval"] = rep.get("PollInterval")
         self.params["response-endpoint"] = rep.text
 
+        body = root.find(e_Body)
+        sr = body.find(".//" + sr_SuccessResponse)
+        self.params["success-response"] = sr
+
     def create_govtalk_details(self, root):
         gtd = ET.SubElement(root, "GovTalkDetails")
         ET.SubElement(gtd, "Keys")
@@ -556,7 +565,8 @@ class GovTalkSubmissionResponse(GovTalkMessage):
         ).text=self.get("response-endpoint")
 
     def create_body(self, root):
-        ET.SubElement(root, "Body")
+        body = ET.SubElement(root, "Body")
+        body.append(self.params["success-response"])
 
 class GovTalkDeleteRequest(GovTalkMessage):
     def __init__(self, params=None):

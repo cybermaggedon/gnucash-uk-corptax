@@ -79,12 +79,18 @@ class Api:
         print("Submission with correlation ID %s has processed successfully" %
               corr_id)
 
+        sr = ET.Element(sr_SuccessResponse)
+        msg = ET.SubElement(sr, sr_Message)
+        msg.text = "Submission processed successfully"
+        msg.set("code", "0000")
+
         return GovTalkSubmissionResponse({
             "class": msg.get("class", ""),
             "correlation-id": corr_id,
             "transaction-id": msg.get("transaction-id", ""),
             "response-endpoint": svc_endpoint,
-            "poll-interval": "1"
+            "poll-interval": "1",
+            "success-response": sr
         })
 
     def delete_request(self, msg):
@@ -208,13 +214,12 @@ class Api:
             print("Envelope is not valid.")
             print(str(e))
 
-
         resp = GovTalkSubmissionAcknowledgement({
             "class": msg.get("class", ""),
             "correlation-id": corr_id,
             "transaction-id": msg.get("transaction-id", ""),
             "response-endpoint": svc_endpoint,
-            "poll-interval": "1"
+            "poll-interval": "1",
         })
 
         print("Assigned correlation ID", corr_id)

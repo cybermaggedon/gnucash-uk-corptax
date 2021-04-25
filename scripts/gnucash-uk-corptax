@@ -152,18 +152,24 @@ async def submit(req):
 
     correlation_id = resp.get("correlation-id")
     endpoint = resp.get("response-endpoint")
-    poll = float(resp.get("poll-interval"))
+    try:
+        poll = float(resp.get("poll-interval"))
+    except:
+        poll = None
 
     print("Correlation ID is", correlation_id)
-    print("Endpoint is", endpoint)
-    print("Poll time is", poll)
 
     timeout = time.time() + 20
     
-    while True:
+    while not isinstance(resp, GovTalkSubmissionResponse):
 
         if time.time() > timeout:
             raise RuntimeError("Timeout waiting for valid response.")
+
+        if poll == None:
+            raise RuntimeError(
+                "Should be polling, but have no poll information?"
+            )
 
         await asyncio.sleep(poll)
 
@@ -180,12 +186,22 @@ async def submit(req):
 
         correlation_id = resp.get("correlation-id")
         endpoint = resp.get("response-endpoint")
-        poll = float(resp.get("poll-interval"))
+        try:
+            poll = float(resp.get("poll-interval"))
+        except:
+            poll = None
 
-        if isinstance(resp, GovTalkSubmissionResponse):
-            break
+    sr = resp.get("success-response")
+    for elt in sr.findall(".//" + sr_Message):
+        print("- Message " + "-" * 68)
+        print(elt.text)
+    print("-" * 76)
 
-    print("Submitted successfully.")
+    print("Submission was successful.")
+
+    if correlation_id == None or correlation_id == "":
+        print("Completed.")
+        return
 
     req = GovTalkDeleteRequest({
 	"username": params["username"],
@@ -205,4 +221,5 @@ try:
     loop.run_until_complete(submit(req))
 except Exception as e:
     print("Exception:", str(e))
+    raise e
 
