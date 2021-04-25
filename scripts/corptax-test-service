@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from govtalk import *
-from ixbrl import get_values
+from gnucash_uk_corptax.govtalk import *
+from gnucash_uk_corptax.ixbrl import get_values
 
 import time
 import asyncio

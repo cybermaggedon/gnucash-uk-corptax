@@ -1,4 +1,6 @@
 
+import gnucash_uk_corptax.irmark as irmark
+
 import hashlib
 import base64
 import xml.etree.ElementTree as ET
@@ -6,7 +8,6 @@ import datetime
 import io
 import copy
 import sys
-import irmark
 
 env_ns = "http://www.govtalk.gov.uk/CM/envelope"
 ET.register_namespace("", env_ns)

@@ -3,7 +3,7 @@
 import xml.etree.ElementTree as ET
 import datetime
 import base64
-from ixbrl import get_values, to_date, to_money, to_whole_money
+from . ixbrl import get_values, to_date, to_money, to_whole_money
 
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 ET.register_namespace("ct", ct_ns)
