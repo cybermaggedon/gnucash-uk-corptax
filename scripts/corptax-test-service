@@ -181,9 +181,9 @@ class Api:
         print("Wrote received/ct.xml")
 
         tree = copy.deepcopy(msg.create_message())
-        for elt in tree.findall("{%s}Body" % env_ns):
-            for elt2 in elt:
-                elt.remove(elt2)
+#        for elt in tree.findall("{%s}Body" % env_ns):
+#            for elt2 in elt:
+#                elt.remove(elt2)
 
         open("received/govtalk.xml", "wb").write(
             ET.tostring(tree.getroot(), xml_declaration=True)

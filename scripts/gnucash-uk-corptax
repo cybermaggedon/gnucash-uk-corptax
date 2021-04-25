@@ -102,30 +102,6 @@ ret = to_return(comps, accts, params)
 
 utr = ret.find(".//{%s}Reference" % ct_ns).text
 
-if args.output_ct:
-
-    req = GovTalkSubmissionRequest({
-        "username": params["username"],
-        "password": params["password"],
-        "class": "HMRC-CT-CT600",
-        "gateway-test": params["gateway-test"],
-        "tax-reference": utr,
-        "vendor-id": params["vendor-id"],
-        "software": params["software"],
-        "software-version": params["software-version"],
-        "ir-envelope": ret.getroot()
-    })
-
-    print(req.toprettyxml())
-
-    sys.exit(0)
-
-if not args.submit:
-    sys.stderr.write("--submit was not specified.  No action will be taken.\n")
-    sys.exit(0)
-
-utr = ret.find(".//{%s}Reference" % ct_ns).text
-
 req = GovTalkSubmissionRequest({
     "username": params["username"],
     "password": params["password"],
@@ -138,9 +114,17 @@ req = GovTalkSubmissionRequest({
     "ir-envelope": ret.getroot()
 })
 
-print("IRmark is", req.get_irmark())
-
 req.add_irmark()
+
+if args.output_ct:
+    print(req.toprettyxml())
+    sys.exit(0)
+
+if not args.submit:
+    sys.stderr.write("--submit was not specified.  No action will be taken.\n")
+    sys.exit(0)
+
+print("IRmark is", req.get_irmark())
 
 async def call(req, ep):
 

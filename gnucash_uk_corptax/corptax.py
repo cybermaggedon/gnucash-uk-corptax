@@ -118,7 +118,7 @@ def to_return(comps, accts, params):
         "IRenvelope": {
             "IRheader": {
                 "Keys": {
-                    "Key": params["tax-reference"]
+                    "Key": x["ct-comp:TaxReference"]
                 },
                 "PeriodEnd": to_date(x["ct-comp:EndOfPeriodCoveredByReturn"]),
                 "Principal": {
