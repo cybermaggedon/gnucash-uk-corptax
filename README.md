@@ -41,7 +41,7 @@ corptax-test-service
 To submit the test account data to the test service:
 
 ```
-gnucash-uk-corptax -c config.json -a accts.html -t ct600.html
+gnucash-uk-corptax -c config.json -a accts.html -t ct600.html --submit
 ```
 
 Output should look like this:
@@ -66,7 +66,7 @@ are sample accounts which were output from `gnucash-ixbrl`.
 
 ```
 usage: gnucash-uk-corptax [-h] [--config CONFIG] --accounts ACCOUNTS
-                          --computations COMPUTATIONS [--show-ct]
+                          --computations COMPUTATIONS [--output-ct] [--submit]
 
 Submittion to HMRC Corporation Tax API
 
@@ -78,7 +78,8 @@ optional arguments:
                         Company accounts iXBRL file
   --computations COMPUTATIONS, --ct600 COMPUTATIONS, -t COMPUTATIONS
                         Corporation tax computations iXBRL file
-  --show-ct, -p         Just output submission message, without submit step
+  --output-ct, -p       Just output submission message, without submit step
+  --submit              Submit the CT message
 ```
 
 The configuration file is a JSON file, should look something like this:
