@@ -159,7 +159,7 @@ async def submit(req):
 
     print("Correlation ID is", correlation_id)
 
-    timeout = time.time() + 20
+    timeout = time.time() + 120
     
     while not isinstance(resp, GovTalkSubmissionResponse):
 
