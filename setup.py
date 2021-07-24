@@ -19,6 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    download_url = "https://github.com/cybermaggedon/gnucash-uk-corptax/archive/refs/tags/v1.2.0.tar.gz",
     install_requires=[
         'aiohttp',
         'py-dmidecode',
