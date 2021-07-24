@@ -49,7 +49,7 @@ def to_return(comps, accts, params):
                         "Profits": to_money(x["ct-comp:AdjustedTradingProfitOfThisPeriod"]),
                         "NetProfits": to_money(x["ct-comp:NetTradingProfits"])                    
                     },
-                    "NonTradingLoanProfitsAndGains": to_money(0),
+#                    "NonTradingLoanProfitsAndGains": to_money(0),
                 },
                 "ChargeableGains": {
                     "NetChargeableGains": to_money(x["ct-comp:NetChargeableGains"])
@@ -88,6 +88,11 @@ def to_return(comps, accts, params):
                 "NetCorporationTaxLiability": to_money(x["ct-comp:CorporationTaxChargeable"]),
                 "TaxChargeable": to_money(x["ct-comp:TaxChargeable"]),
                 "TaxPayable": to_money(x["ct-comp:TaxPayable"])
+            },
+            "EnhancedExpenditure": {
+                "SMEclaim": "yes",
+                "RandDEnhancedExpenditure": to_money(x["ct-comp:AdjustmentsAdditionalDeductionForQualifyingRDExpenditureSME"]),
+                "RandDAndCreativeEnhancedExpenditure": to_money(x["ct-comp:AdjustmentsAdditionalDeductionForQualifyingRDExpenditureSME"])
             },
             "AllowancesAndCharges": {
                 "AIACapitalAllowancesInc": to_money(x["ct-comp:MainPoolAnnualInvestmentAllowance"]),

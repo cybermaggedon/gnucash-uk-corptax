@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gnucash-uk-corptax",
-    version="1.1",
+    version="1.2.0",
     author="Cybermaggedon",
     author_email="mark@cyberapocalypse.co.uk",
     description="UK HMRC Corporation Tax client for GnuCash users",

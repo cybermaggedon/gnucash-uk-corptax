@@ -142,6 +142,7 @@ async def call(req, ep):
             msg = GovTalkMessage.decode(data)
 
             if isinstance(msg, GovTalkSubmissionError):
+                print(data)
                 raise RuntimeError(msg.get("error-text"))
 
             return msg
