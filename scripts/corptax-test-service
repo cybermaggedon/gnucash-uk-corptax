@@ -177,6 +177,12 @@ class Api:
             vals = get_values(doc)
             print("Accounts document has %d facts" % len(vals))
 
+        for elt in ire.findall(".//ct:AttachedFiles//ct:Attachment", {"ct": ct5_ns}):
+            att = base64.b64decode(elt.text)
+            fname = elt.get("Filename")
+            open("received/" + fname, "wb").write(att)
+            print("Wrote received/" + fname)
+
         # The CT is invalid by the schema, need to remove IRmark if it exists
         ct_copy = copy.deepcopy(ire)
 

@@ -8,7 +8,7 @@ from . ixbrl import get_values, to_date, to_money, to_whole_money
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 ET.register_namespace("ct", ct_ns)
 
-def to_return(comps, accts, params):
+def to_return(comps, accts, params, atts):
 
     comps_doc = ET.fromstring(comps)
     
@@ -180,6 +180,16 @@ def to_return(comps, accts, params):
     root.find(".//{%s}Key[1]" % ct_ns).set(
         "Type", "UTR"
     )
+
+    attf_elt = root.find(".//{%s}AttachedFiles" % ct_ns)
+
+    for k, v in atts.items():
+        att_text = base64.b64encode(v).decode("utf-8")
+        att_elt = ET.SubElement(attf_elt, "{%s}Attachment" % ct_ns)
+        att_elt.set("Type", "other")
+        att_elt.set("Format", "pdf")
+        att_elt.set("Filename", k)
+        att_elt.text = att_text
 
     return ET.ElementTree(root)
 

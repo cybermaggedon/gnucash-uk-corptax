@@ -23,6 +23,8 @@ parser.add_argument('--accounts', '-a', required=True,
                     help='Company accounts iXBRL file')
 parser.add_argument('--computations', '--ct600', '-t', required=True,
                     help='Corporation tax computations iXBRL file')
+parser.add_argument('--attachment', '-m', required=False, action='append',
+                    help='Corporation tax computations iXBRL file')
 parser.add_argument('--output-ct', '-p',
                     action="store_true", default=False,
                     help='Just output submission message, without submit step')
@@ -98,7 +100,15 @@ if not found_ct:
     sys.stderr.write("Is it a corporation tax computations file?\n")
     sys.exit(1)
 
-ret = to_return(comps, accts, params)
+if args.attachment is not None:
+    atts = {
+        filename: open(filename, "rb").read()
+        for filename in args.attachment
+    }
+else:
+    atts = {}
+
+ret = to_return(comps, accts, params, atts)
 
 utr = ret.find(".//{%s}Reference" % ct_ns).text
 
