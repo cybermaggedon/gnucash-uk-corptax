@@ -55,10 +55,6 @@ def to_return(comps, accts, params, atts):
                     "NetChargeableGains": to_money(x["ct-comp:NetChargeableGains"])
                 },
                 "ProfitsBeforeOtherDeductions": to_money(x["ct-comp:ProfitsBeforeOtherDeductionsAndReliefs"]),
-                "DeductionsAndReliefs": {
-                    "ManagementExpenses": to_money(x["ct-comp:TotalManagementExpenses"]),
-                    "Total": to_money(x["ct-comp:TotalDeductionsAndReliefs"])
-                },
                 "ChargesAndReliefs": {
                     "ProfitsBeforeDonationsAndGroupRelief": to_money(x["ct-comp:ProfitsBeforeChargesAndGroupRelief"])
                 },
