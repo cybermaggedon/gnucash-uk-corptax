@@ -13,5 +13,6 @@
     "first-name": "Sarah",
     "second-name": "McAcre",
     "email": "sarah@example.org",
-    "phone": "447900123456"
+    "phone": "447900123456",
+    "timestamp": "2022-03-31T00:00:00"
 }

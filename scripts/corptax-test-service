@@ -12,6 +12,7 @@ import xmlschema
 
 svc_endpoint = "http://localhost:8082/"
 
+env_ns = "http://www.govtalk.gov.uk/CM/envelope"
 ct5_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 
 print("Loading schemas...")
@@ -123,13 +124,20 @@ class Api:
         s.time = time.time()
         self.submissions[corr_id] = s
 
-        ire = msg.get("ir-envelope")
+        ire = msg.ir_envelope()
 
         print()
         print("Submission received:")
 
         for elt in ire.findall(".//ct:IRmark", {"ct": ct5_ns}):
             print("  %-20s: %s" % ("IRmark", elt.text))
+
+        try:
+            ts = msg.get("timestamp")
+            if ts:
+                print("  %-20s: %s" % ("Timestamp", ts))
+        except:
+            pass
 
         for elt in ire.findall(".//ct:CompanyName", {"ct": ct5_ns}):
             print("  %-20s: %s" % ("Company", elt.text))

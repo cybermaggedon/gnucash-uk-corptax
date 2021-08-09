@@ -27,6 +27,7 @@ e_Keys = "{%s}Keys" % env_ns
 e_Key = "{%s}Key" % env_ns
 e_URI = "{%s}URI" % env_ns
 e_ChannelRouting = "{%s}ChannelRouting" % env_ns
+e_Timestamp = "{%s}Timestamp" % env_ns
 e_Channel = "{%s}Channel" % env_ns
 e_Product = "{%s}Product" % env_ns
 e_Version = "{%s}Version" % env_ns
@@ -262,9 +263,22 @@ class GovTalkSubmissionRequest(GovTalkMessage):
         self.params["software"] = gtd.find(e_ChannelRouting).find(e_Channel).find(e_Product).text
         self.params["software-version"] = gtd.find(e_ChannelRouting).find(e_Channel).find(e_Version).text
 
+        try:
+            self.params["timestamp"] = datetime.datetime.fromisoformat(
+                gtd.find(e_ChannelRouting).find(e_Timestamp).text
+            )
+        except:
+            pass
+
         body = root.find(e_Body)
         ire = body.find(ct_IRenvelope)
         self.params["ir-envelope"] = ire
+
+        try:
+            ts = root.find(e_Timestamp).text
+            self.params["timestamp"] = datetime.datetime.fromisoformat(ts)
+        except:
+            pass
 
         try:
             self.params["email"] = sender.find(e_EmailAddress).text
@@ -295,16 +309,21 @@ class GovTalkSubmissionRequest(GovTalkMessage):
         keys = ET.SubElement(gtd, e_Keys)
 
         key = ET.SubElement(keys, e_Key, Type="UTR")
-        key.text=self.get("tax-reference")
+        key.text = self.get("tax-reference")
 
         td = ET.SubElement(gtd, "TargetDetails")
-        ET.SubElement(td, "Organisation").text="HMRC"
+        ET.SubElement(td, "Organisation").text = "HMRC"
 
         cr = ET.SubElement(gtd, "ChannelRouting")
         ch = ET.SubElement(cr, "Channel")
-        ET.SubElement(ch, "URI").text=self.get("vendor-id")
-        ET.SubElement(ch, "Product").text=self.get("software")
-        ET.SubElement(ch, "Version").text=self.get("software-version")
+        ET.SubElement(ch, "URI").text = self.get("vendor-id")
+        ET.SubElement(ch, "Product").text = self.get("software")
+        ET.SubElement(ch, "Version").text = self.get("software-version")
+        try:
+            timestamp = self.get("timestamp").isoformat()
+            ET.SubElement(cr, "Timestamp").text = timestamp
+        except:
+            pass
               
     def create_sender_details(self, root):
 
@@ -312,27 +331,27 @@ class GovTalkSubmissionRequest(GovTalkMessage):
 
         ids = ET.SubElement(sd, "IDAuthentication")
 
-        ET.SubElement(ids, "SenderID").text=self.get("username")
+        ET.SubElement(ids, "SenderID").text = self.get("username")
 
         auth = ET.SubElement(ids, "Authentication")
-        ET.SubElement(auth, "Method").text="clear"
-        ET.SubElement(auth, "Role").text="principal"
-        ET.SubElement(auth, "Value").text=self.get("password")
+        ET.SubElement(auth, "Method").text = "clear"
+        ET.SubElement(auth, "Role").text = "principal"
+        ET.SubElement(auth, "Value").text = self.get("password")
 
         if self.get("email", "") != "":
-            ET.SubElement(ids, "EmailAddress").text=self.get("email")
+            ET.SubElement(ids, "EmailAddress").text = self.get("email")
 
     def create_message_details(self, root):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, e_Class).text=self.get("class")
-        ET.SubElement(md, e_Qualifier).text=self.get("qualifier")
-        ET.SubElement(md, e_Function).text=self.get("function")
-        ET.SubElement(md, "TransactionID").text=self.get("transaction-id")
+        ET.SubElement(md, e_Class).text = self.get("class")
+        ET.SubElement(md, e_Qualifier).text = self.get("qualifier")
+        ET.SubElement(md, e_Function).text = self.get("function")
+        ET.SubElement(md, "TransactionID").text = self.get("transaction-id")
         ET.SubElement(md, "CorrelationID")
-        ET.SubElement(md, "Transformation").text="XML"
-        ET.SubElement(md, "GatewayTest").text=self.get("gateway-test", "0")
+        ET.SubElement(md, "Transformation").text = "XML"
+        ET.SubElement(md, "GatewayTest").text = self.get("gateway-test", "0")
 
 class GovTalkSubmissionAcknowledgement(GovTalkMessage):
     def __init__(self, params=None):
@@ -374,16 +393,16 @@ class GovTalkSubmissionAcknowledgement(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, "Class").text=self.get("class")
-        ET.SubElement(md, "Qualifier").text=self.get("qualifier")
-        ET.SubElement(md, "Function").text=self.get("function")
-        ET.SubElement(md, "TransactionID").text=self.get("transaction-id", "")
-        ET.SubElement(md, "CorrelationID").text=self.get("correlation-id", "")
-        ET.SubElement(md, "Transformation").text="XML"
-        ET.SubElement(md, "GatewayTest").text=self.get("gateway-test", "0")
+        ET.SubElement(md, "Class").text = self.get("class")
+        ET.SubElement(md, "Qualifier").text = self.get("qualifier")
+        ET.SubElement(md, "Function").text = self.get("function")
+        ET.SubElement(md, "TransactionID").text = self.get("transaction-id", "")
+        ET.SubElement(md, "CorrelationID").text = self.get("correlation-id", "")
+        ET.SubElement(md, "Transformation").text = "XML"
+        ET.SubElement(md, "GatewayTest").text = self.get("gateway-test", "0")
         ET.SubElement(
             md, "ResponseEndPoint", PollInterval=self.get("poll-interval")
-        ).text=self.get("response-endpoint")
+        ).text = self.get("response-endpoint")
 
     def create_body(self, root):
         ET.SubElement(root, "Body")
@@ -423,13 +442,13 @@ class GovTalkSubmissionPoll(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, "Class").text=self.get("class")
-        ET.SubElement(md, "Qualifier").text=self.get("qualifier")
-        ET.SubElement(md, "Function").text=self.get("function")
-        ET.SubElement(md, "TransactionID").text=self.get("transaction-id", "")
-        ET.SubElement(md, "CorrelationID").text=self.get("correlation-id", "")
-        ET.SubElement(md, "Transformation").text="XML"
-        ET.SubElement(md, "GatewayTest").text=self.get("gateway-test", "0")
+        ET.SubElement(md, "Class").text = self.get("class")
+        ET.SubElement(md, "Qualifier").text = self.get("qualifier")
+        ET.SubElement(md, "Function").text = self.get("function")
+        ET.SubElement(md, "TransactionID").text = self.get("transaction-id", "")
+        ET.SubElement(md, "CorrelationID").text = self.get("correlation-id", "")
+        ET.SubElement(md, "Transformation").text = "XML"
+        ET.SubElement(md, "GatewayTest").text = self.get("gateway-test", "0")
 
     def create_body(self, root):
         pass
@@ -484,10 +503,10 @@ class GovTalkSubmissionError(GovTalkMessage):
 
         err = ET.SubElement(gte, "Error")
 
-        ET.SubElement(err, e_RaisedBy).text="Gateway"
-        ET.SubElement(err, e_Number).text=self.get("error-number")
-        ET.SubElement(err, e_Type).text=self.get("error-type")
-        ET.SubElement(err, e_Text).text=self.get("error-text")
+        ET.SubElement(err, e_RaisedBy).text = "Gateway"
+        ET.SubElement(err, e_Number).text = self.get("error-number")
+        ET.SubElement(err, e_Type).text = self.get("error-type")
+        ET.SubElement(err, e_Text).text = self.get("error-text")
         ET.SubElement(err, e_Location)
               
     def create_sender_details(self, root):
@@ -497,16 +516,16 @@ class GovTalkSubmissionError(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, e_Class).text=self.get("class")
-        ET.SubElement(md, e_Qualifier).text=self.get("qualifier")
-        ET.SubElement(md, e_Function).text=self.get("function")
-        ET.SubElement(md, e_TransactionID).text=self.get("transaction-id", "")
-        ET.SubElement(md, e_CorrelationID).text=self.get("correlation-id", "")
-        ET.SubElement(md, e_Transformation).text="XML"
-        ET.SubElement(md, e_GatewayTest).text=self.get("gateway-test", "0")
+        ET.SubElement(md, e_Class).text = self.get("class")
+        ET.SubElement(md, e_Qualifier).text = self.get("qualifier")
+        ET.SubElement(md, e_Function).text = self.get("function")
+        ET.SubElement(md, e_TransactionID).text = self.get("transaction-id", "")
+        ET.SubElement(md, e_CorrelationID).text = self.get("correlation-id", "")
+        ET.SubElement(md, e_Transformation).text = "XML"
+        ET.SubElement(md, e_GatewayTest).text = self.get("gateway-test", "0")
         ET.SubElement(
             md, e_ResponseEndPoint, PollInterval=self.get("poll-interval")
-        ).text=self.get("response-endpoint")
+        ).text = self.get("response-endpoint")
 
     def create_body(self, root):
         pass
@@ -553,16 +572,16 @@ class GovTalkSubmissionResponse(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, e_Class).text=self.get("class")
-        ET.SubElement(md, e_Qualifier).text=self.get("qualifier")
-        ET.SubElement(md, e_Function).text=self.get("function")
-        ET.SubElement(md, e_TransactionID).text=self.get("transaction-id", "")
-        ET.SubElement(md, e_CorrelationID).text=self.get("correlation-id", "")
-        ET.SubElement(md, e_Transformation).text="XML"
-        ET.SubElement(md, e_GatewayTest).text=self.get("gateway-test", "0")
+        ET.SubElement(md, e_Class).text = self.get("class")
+        ET.SubElement(md, e_Qualifier).text = self.get("qualifier")
+        ET.SubElement(md, e_Function).text = self.get("function")
+        ET.SubElement(md, e_TransactionID).text = self.get("transaction-id", "")
+        ET.SubElement(md, e_CorrelationID).text = self.get("correlation-id", "")
+        ET.SubElement(md, e_Transformation).text = "XML"
+        ET.SubElement(md, e_GatewayTest).text = self.get("gateway-test", "0")
         ET.SubElement(
             md, e_ResponseEndPoint, PollInterval=self.get("poll-interval")
-        ).text=self.get("response-endpoint")
+        ).text = self.get("response-endpoint")
 
     def create_body(self, root):
         body = ET.SubElement(root, "Body")
@@ -602,13 +621,13 @@ class GovTalkDeleteRequest(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, "Class").text=self.get("class")
-        ET.SubElement(md, "Qualifier").text=self.get("qualifier")
-        ET.SubElement(md, "Function").text=self.get("function")
-        ET.SubElement(md, "TransactionID").text=self.get("transaction-id", "")
-        ET.SubElement(md, "CorrelationID").text=self.get("correlation-id", "")
-        ET.SubElement(md, "Transformation").text="XML"
-        ET.SubElement(md, "GatewayTest").text=self.get("gateway-test", "0")
+        ET.SubElement(md, "Class").text = self.get("class")
+        ET.SubElement(md, "Qualifier").text = self.get("qualifier")
+        ET.SubElement(md, "Function").text = self.get("function")
+        ET.SubElement(md, "TransactionID").text = self.get("transaction-id", "")
+        ET.SubElement(md, "CorrelationID").text = self.get("correlation-id", "")
+        ET.SubElement(md, "Transformation").text = "XML"
+        ET.SubElement(md, "GatewayTest").text = self.get("gateway-test", "0")
 
     def create_body(self, root):
         pass
@@ -651,15 +670,15 @@ class GovTalkDeleteResponse(GovTalkMessage):
 
         md = ET.SubElement(root, e_MessageDetails)
 
-        ET.SubElement(md, e_Class).text=self.get("class")
-        ET.SubElement(md, e_Qualifier).text=self.get("qualifier")
-        ET.SubElement(md, e_Function).text=self.get("function")
-        ET.SubElement(md, e_TransactionID).text=self.get("transaction-id", "")
-        ET.SubElement(md, e_CorrelationID).text=self.get("correlation-id", "")
-        ET.SubElement(md, e_Transformation).text="XML"
-        ET.SubElement(md, e_GatewayTest).text=self.get("gateway-test", "0")
+        ET.SubElement(md, e_Class).text = self.get("class")
+        ET.SubElement(md, e_Qualifier).text = self.get("qualifier")
+        ET.SubElement(md, e_Function).text = self.get("function")
+        ET.SubElement(md, e_TransactionID).text = self.get("transaction-id", "")
+        ET.SubElement(md, e_CorrelationID).text = self.get("correlation-id", "")
+        ET.SubElement(md, e_Transformation).text = "XML"
+        ET.SubElement(md, e_GatewayTest).text = self.get("gateway-test", "0")
         ET.SubElement(md, e_ResponseEndPoint,
-                      text=self.get("response-endpoint"),
+                      text = self.get("response-endpoint"),
                       attrs={"PollInterval": self.get("poll-interval")})
 
     def create_body(self, root):
