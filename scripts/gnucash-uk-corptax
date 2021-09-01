@@ -125,6 +125,9 @@ req_params = {
     "ir-envelope": ret.getroot()
 }
 
+if "class" in params:
+    req_params["class"] = params["class"]
+
 if "timestamp" in params:
     req_params["timestamp"] = datetime.datetime.fromisoformat(
         params["timestamp"]
