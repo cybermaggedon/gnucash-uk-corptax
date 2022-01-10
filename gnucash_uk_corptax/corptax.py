@@ -8,6 +8,12 @@ from . ixbrl import get_values, to_date, to_money, to_whole_money
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 ET.register_namespace("ct", ct_ns)
 
+def to_values(comps):
+
+    comps_doc = ET.fromstring(comps)
+    x = get_values(comps_doc)
+    return x
+
 def to_return(comps, accts, params, atts):
 
     comps_doc = ET.fromstring(comps)

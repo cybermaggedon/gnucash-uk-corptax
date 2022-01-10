@@ -29,6 +29,9 @@ parser.add_argument('--attachment', '-m', required=False, action='append',
 parser.add_argument('--output-ct', '-p',
                     action="store_true", default=False,
                     help='Just output submission message, without submit step')
+parser.add_argument('--output-values',
+                    action="store_true", default=False,
+                    help='Just output some data values (debug)')
 parser.add_argument('--submit',
                     action="store_true", default=False,
                     help='Submit the CT message')
@@ -108,6 +111,13 @@ if args.attachment is not None:
     }
 else:
     atts = {}
+
+if args.output_values:
+    vals = to_values(comps)
+
+    for k, v in vals.items():
+        print("%-50s: %s" % (k, str(v)))
+    sys.exit(0)
 
 ret = to_return(comps, accts, params, atts)
 
