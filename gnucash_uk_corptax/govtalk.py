@@ -3,15 +3,13 @@ import gnucash_uk_corptax.irmark as irmark
 
 import hashlib
 import base64
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import datetime
 import io
 import copy
 import sys
 
 env_ns = "http://www.govtalk.gov.uk/CM/envelope"
-ET.register_namespace("", env_ns)
-
 
 e_GovTalkMessage = "{%s}GovTalkMessage" % env_ns
 e_Header = "{%s}Header" % env_ns
@@ -59,19 +57,6 @@ sr_ns = "http://www.inlandrevenue.gov.uk/SuccessResponse"
 sr_SuccessResponse = "{%s}SuccessResponse" % sr_ns
 sr_Message = "{%s}Message" % sr_ns
 
-ET.register_namespace("ct", "http://www.govtalk.gov.uk/taxation/CT/5")
-
-def pretty_print(current, parent=None, index=-1, depth=0):
-    for i, node in enumerate(current):
-        pretty_print(node, current, i, depth + 1)
-    if parent is not None:
-        if index == 0:
-            parent.text = '\n' + ('\t' * depth)
-        else:
-            parent[index - 1].tail = '\n' + ('\t' * depth)
-        if index == len(parent) - 1:
-            current.tail = '\n' + ('\t' * (depth - 1))
-
 class Message:
     def __init__(self):
         pass
@@ -91,10 +76,9 @@ class Message:
 
     def toprettyxml(self):
         msg = self.create_message()
-        pretty_print(msg.getroot())
-        buf = io.StringIO()
-        msg.write(buf, encoding="unicode", xml_declaration=True)
-        return buf.getvalue()
+        return ET.tostring(
+            msg, xml_declaration=True, pretty_print=True, encoding="UTF-8"
+        ).decode("utf-8")
 
     def tocanonicalxml(self, pre):
         post = io.StringIO()
@@ -112,9 +96,9 @@ class GovTalkMessage(Message):
     def decode(data):
 
         if isinstance(data, str):
-            root = ET.fromstring(data)
+            root = ET.fromstring(data.encode("utf-8"))
         else:
-            root = ET.fromstring(data.decode("utf-8"))
+            root = ET.fromstring(data)
 
         md = root.find("%s/%s" % (e_Header, e_MessageDetails))
 
@@ -166,11 +150,15 @@ class GovTalkMessage(Message):
 
     def toxml(self):
         tree = self.create_message()
-        return ET.tostring(tree.getroot())
+        return ET.tostring(
+            tree, xml_declaration=True, encoding="UTF-8"
+        )
 
     def create_message(self):
 
-        root = ET.Element(e_GovTalkMessage)
+        root = ET.Element(
+            e_GovTalkMessage, nsmap={None: env_ns, "ct": ct_ns}
+        )
 
         ev = ET.SubElement(root, e_EnvelopeVersion)
         ev.text = "2.0"
@@ -234,7 +222,7 @@ class GovTalkMessage(Message):
             for mark in hdr.findall(ct_IRmark):
                 hdr.remove(mark)
 
-        pre = io.StringIO()
+        pre = io.BytesIO()
         ET.ElementTree(bc).write(pre, encoding="unicode", xml_declaration=False)
         i = irmark.compute(pre.getvalue())
 
@@ -677,9 +665,10 @@ class GovTalkDeleteResponse(GovTalkMessage):
         ET.SubElement(md, e_CorrelationID).text = self.get("correlation-id", "")
         ET.SubElement(md, e_Transformation).text = "XML"
         ET.SubElement(md, e_GatewayTest).text = self.get("gateway-test", "0")
-        ET.SubElement(md, e_ResponseEndPoint,
-                      text = self.get("response-endpoint"),
-                      attrs={"PollInterval": self.get("poll-interval")})
+        elt = ET.SubElement(
+            md, e_ResponseEndPoint,
+            attrib={"PollInterval": self.get("poll-interval")}
+        ).text = self.get("response-endpoint")
 
     def create_body(self, root):
         ET.SubElement(root, "Body")
