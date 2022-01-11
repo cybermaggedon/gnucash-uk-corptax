@@ -22,6 +22,9 @@ def compute(xml):
     output = io.BytesIO()
     ET.ElementTree(elt).write_c14n(output)
 
+#    print(output.getvalue().decode("utf-8"))
+#    raise RuntimeError("ASD")
+
     shasum = hashlib.sha1(output.getvalue()).digest()
     irmark = base64.b64encode(shasum).decode("utf-8")
     return irmark

@@ -23,7 +23,8 @@ setuptools.setup(
     install_requires=[
         'aiohttp',
         'py-dmidecode',
-        'requests'
+        'requests',
+        'ixbrl-parse'
     ],
     scripts=[
         "scripts/gnucash-uk-corptax",

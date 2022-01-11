@@ -43,13 +43,13 @@ args = parser.parse_args(sys.argv[1:])
 params = json.loads(open(args.config).read())
 
 try:
-    accts = open(args.accounts).read()
+    accts = open(args.accounts, "rb").read()
 except Exception as e:
     sys.stderr.write("Could not read accounts file: %s\n" % str(e))
     sys.exit(1)
 
 try:
-    comps = open(args.computations).read()
+    comps = open(args.computations, "rb").read()
 except Exception as e:
     sys.stderr.write("Could not read computations file: %s\n" % str(e))
     sys.exit(1)
