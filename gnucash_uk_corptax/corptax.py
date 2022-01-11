@@ -5,7 +5,6 @@ from io import BytesIO
 import datetime
 import base64
 
-#from . ixbrl import get_values, to_date, to_money, to_whole_money
 from ixbrl_parse.ixbrl import *
 from ixbrl_parse.value import *
 
@@ -17,86 +16,76 @@ nsmap = {
 
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 
+# Presents a date in the appropriate format for CT XML
 def to_date(d):
     return str(d)
 
+# Presents cash in the appropriate format for CT XML
 def to_money(v):
     return "%.2f" % float(v)
 
-def get(root, localname):
-    for name, value in root.values.items():
-        if name.localname == localname:
-            yield value
-    for reln, ctxt in root.children.items():
-        for res in get(ctxt, localname):
-            yield res
+# Iterates over a context and all child, extracting values as k,v pairs.
+def get_all_context_values(ctxt):
 
-def get1(root, localname):
-    for v in get(root, localname):
-        return v
-    raise RuntimeError("Not found")
-
-def getperiod(root, s, e):
-
-    for rel, ctxt in root.children.items():
-        if isinstance(rel, Instant): continue
-        if isinstance(rel, Entity):
-            return getperiod(ctxt, s, e)
-        if isinstance(rel, Period):
-            if s == rel.start and e == rel.end:
-                return ctxt
-
-    return None
-
-def getvalues(root, s, e, prefix=""):
-
-
-    for name, value in root.values.items():
-
+    for name, value in ctxt.values.items():
         if name.namespace in nsmap:
             n = nsmap[name.namespace] + ":" + name.localname
-            yield prefix + n, value.to_value().get_value()
+            yield n, value.to_value().get_value()
         else:
             raise RuntimeError("Namespace %s not known" % name.namespace)
 
-    for rel, ctxt in root.children.items():
+    for rel, sctxt in ctxt.children.items():
+        for k, v in get_all_context_values(sctxt):
+            yield k, v
 
-        if isinstance(rel, Instant):
-            for name, value in getvalues(ctxt, s, e, prefix):
-                yield name, value
-
-        if isinstance(rel, Entity):
-
-            yield (
-                "uk-core:UKCompaniesHouseRegisteredNumber",
-                rel.id
-            )
-                  
-            for name, value in getvalues(ctxt, s, e, prefix):
-                yield name, value
-
-        if isinstance(rel, Period):
-            if s == rel.start and e == rel.end:
-                for name, value in getvalues(ctxt, s, e, prefix):
-                    yield name, value
-
-        if isinstance(rel, Dimension):
-            pref = prefix + rel.value.localname + "/"
-            pref = ""
-            for name, value in getvalues(ctxt, s, e, pref):
-                yield name, value
-
+# Gets a set of values dict from an iXBRL document.
 def get_values(comps):
 
+    # Parse doc
     tree = ET.parse(BytesIO(comps))
     i = parse(tree)
 
-    start = get1(i.root, "StartOfPeriodCoveredByReturn").to_value().get_value()
-    end = get1(i.root, "EndOfPeriodCoveredByReturn").to_value().get_value()
+    # Find the period context with the latest end date
+    p_ctxt = None
+    t = None
+    for rel, ctxt, lvl in i.context_iter():
+        if isinstance(rel, Period):
+            if not t or rel.end > t:
+                t = rel.end
+                p_ctxt = ctxt
+
+    # Find the instant context with the latest date
+    i_ctxt = None
+    t = None
+    for rel, ctxt, lvl in i.context_iter():
+        if isinstance(rel, Instant):
+            if not t or rel.instant > t:
+                t = rel.instant
+                i_ctxt = ctxt
+
+    # Find the entity context
+    e_ctxt = None
+    for rel, ctxt, lvl in i.context_iter():
+        if isinstance(rel, Entity):
+            e_ctxt = ctxt
+
+    # Shouldn't happen, only if we were fed an invalid doc
+    if not p_ctxt: raise RuntimeError("No period context found.")
+    if not i_ctxt: RuntimeError("No instant context found.")
+    if not e_ctxt: raise RuntimeError("No entity context found.")
 
     d = {}
-    for n, v in getvalues(i.root, start, end):
-        d[n] = v
+
+    # Loop over period context and all children, get values
+    for k, v in get_all_context_values(p_ctxt):
+        d[k] = v
+
+    # Loop over instant context and all children, get values
+    for k, v in get_all_context_values(i_ctxt):
+        d[k] = v
+
+    # Company number from entity
+    d["uk-core:UKCompaniesHouseRegisteredNumber"] = e_ctxt.entity.id
 
     return d
 
@@ -105,8 +94,6 @@ def to_values(comps):
 
 def to_return(comps, accts, params, atts):
 
-#    comps_doc = ET.fromstring(comps)
-    
     x = get_values(comps)
 
     comp_ixbrl = base64.b64encode(comps).decode("utf-8")
