@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gnucash-uk-corptax",
-    version="1.2.0",
+    version="1.3.0",
     author="Cybermaggedon",
     author_email="mark@cyberapocalypse.co.uk",
     description="UK HMRC Corporation Tax client for GnuCash users",
@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    download_url = "https://github.com/cybermaggedon/gnucash-uk-corptax/archive/refs/tags/v1.2.0.tar.gz",
+    download_url = "https://github.com/cybermaggedon/gnucash-uk-corptax/archive/refs/tags/v1.3.0.tar.gz",
     install_requires=[
         'aiohttp',
         'py-dmidecode',
