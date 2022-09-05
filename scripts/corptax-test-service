@@ -23,7 +23,7 @@ hints = {
 ct_schema = xmlschema.XMLSchema(open("schema/CT-2014-v1-96.xsd"))
 
 env_schema = xmlschema.XMLSchema("schema/envelope-v2-0-HMRC.xsd",
-                                 base_url="schema/", locations=hints)
+                                 base_url=".", locations=hints)
 
 print("Loaded.")
 

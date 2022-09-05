@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
 from lxml import etree as ET
-from io import BytesIO
-import datetime
 import base64
-
-from ixbrl_parse.ixbrl import *
-from ixbrl_parse.value import *
+from gnucash_uk_corptax.computations import Computations
 
 nsmap = {
     "http://www.hmrc.gov.uk/schemas/ct/comp/2021-01-01": "ct-comp",
@@ -39,62 +35,46 @@ def get_all_context_values(ctxt):
             yield k, v
 
 # Gets a set of values dict from an iXBRL document.
-def get_values(comps):
-
-    # Parse doc
-    tree = ET.parse(BytesIO(comps))
-    i = parse(tree)
-
-    # Find the period context with the latest end date
-    p_ctxt = None
-    t = None
-    for rel, ctxt, lvl in i.context_iter():
-        if isinstance(rel, Period):
-            if not t or rel.end > t:
-                t = rel.end
-                p_ctxt = ctxt
-
-    # Find the instant context with the latest date
-    i_ctxt = None
-    t = None
-    for rel, ctxt, lvl in i.context_iter():
-        if isinstance(rel, Instant):
-            if not t or rel.instant > t:
-                t = rel.instant
-                i_ctxt = ctxt
-
-    # Find the entity context
-    e_ctxt = None
-    for rel, ctxt, lvl in i.context_iter():
-        if isinstance(rel, Entity):
-            e_ctxt = ctxt
-
-    # Shouldn't happen, only if we were fed an invalid doc
-    if not p_ctxt: raise RuntimeError("No period context found.")
-    if not i_ctxt: RuntimeError("No instant context found.")
-    if not e_ctxt: raise RuntimeError("No entity context found.")
-
-    d = {}
-
-    # Loop over period context and all children, get values
-    for k, v in get_all_context_values(p_ctxt):
-        d[k] = v
-
-    # Loop over instant context and all children, get values
-    for k, v in get_all_context_values(i_ctxt):
-        d[k] = v
-
-    # Company number from entity
-    d["uk-core:UKCompaniesHouseRegisteredNumber"] = e_ctxt.entity.id
-
-    return d
+def get_comps(comps):
+    c = Computations(comps)
+    return c
 
 def to_values(comps):
-    return get_values(comps)
+    c = get_comps(comps)
+
+    return {
+        "start": c.start(),
+        "end": c.end(),
+        "company_name": c.company_name(),
+        "tax_reference": c.tax_reference(),
+        "company_number": c.company_number(),
+        "gross_profit_loss": c.gross_profit_loss(),
+        "turnover_revenue": c.turnover_revenue(),
+        "adjusted_trading_profit": c.adjusted_trading_profit(),
+        "net_trading_profits": c.net_trading_profits(),
+        "net_chargeable_gains": c.net_chargeable_gains(),
+        "profits_before__deductions_and_reliefs": c.profits_before_other_deductions_and_reliefs(),
+        "profits_before_charges_and_group_relief": c.profits_before_charges_and_group_relief(),
+        "total_profits_chargeable_to_corporation_tax": c.total_profits_chargeable_to_corporation_tax(),
+        "fy1": c.fy1(),
+        "fy2": c.fy2(),
+        "fy1_profit": c.fy1_profit(),
+        "fy2_profit": c.fy2_profit(),
+        "fy1_tax_rate": c.fy1_tax_rate(),
+        "fy2_tax_rate": c.fy2_tax_rate(),
+        "fy1_tax": c.fy1_tax(),
+        "fy2_tax": c.fy2_tax(),
+        "corporation_tax_chargeable": c.corporation_tax_chargeable(),
+        "tax_chargeable": c.tax_chargeable(),
+        "tax_payable": c.tax_payable(),
+        "sme_rnd_expenditure_deduction": c.sme_rnd_expenditure_deduction(),
+        "investment_allowance": c.investment_allowance(),
+    }
+    
 
 def to_return(comps, accts, params, atts):
 
-    x = get_values(comps)
+    x = get_comps(comps)
 
     comp_ixbrl = base64.b64encode(comps).decode("utf-8")
     accounts_ixbrl = base64.b64encode(accts).decode("utf-8")
@@ -102,13 +82,13 @@ def to_return(comps, accts, params, atts):
     ret = {
         "CompanyTaxReturn": {
             "CompanyInformation": {
-                "CompanyName": x["ct-comp:CompanyName"],
-                "RegistrationNumber": x["uk-core:UKCompaniesHouseRegisteredNumber"],
-                "Reference": x["ct-comp:TaxReference"],
+                "CompanyName": x.company_name(),
+                "RegistrationNumber": x.company_number(),
+                "Reference": x.tax_reference(),
                 "CompanyType": params.get("company-type"),
                 "PeriodCovered": {
-                    "From": to_date(x["ct-comp:StartOfPeriodCoveredByReturn"]),
-                    "To": to_date(x["ct-comp:EndOfPeriodCoveredByReturn"]),
+                    "From": to_date(x.start()),
+                    "To": to_date(x.end()),
                 }
             },
             "ReturnInfoSummary": {
@@ -123,57 +103,57 @@ def to_return(comps, accts, params, atts):
                 }
             },
             "Turnover": {
-                "Total": to_money(x["uk-core:TurnoverRevenue"])
+                "Total": to_money(x.turnover_revenue()),
             },
             "CompanyTaxCalculation": {
                 "Income": {
                     "Trading": {
-                        "Profits": to_money(x["ct-comp:AdjustedTradingProfitOfThisPeriod"]),
-                        "NetProfits": to_money(x["ct-comp:NetTradingProfits"])                    
+                        "Profits": to_money(x.adjusted_trading_profit()),
+                        "NetProfits": to_money(x.net_trading_profits()),
                     },
 #                    "NonTradingLoanProfitsAndGains": to_money(0),
                 },
                 "ChargeableGains": {
-                    "NetChargeableGains": to_money(x["ct-comp:NetChargeableGains"])
+                    "NetChargeableGains": to_money(x.net_chargeable_gains()),
                 },
-                "ProfitsBeforeOtherDeductions": to_money(x["ct-comp:ProfitsBeforeOtherDeductionsAndReliefs"]),
+                "ProfitsBeforeOtherDeductions": to_money(x.profits_before_other_deductions_and_reliefs()),
                 "ChargesAndReliefs": {
-                    "ProfitsBeforeDonationsAndGroupRelief": to_money(x["ct-comp:ProfitsBeforeChargesAndGroupRelief"])
+                    "ProfitsBeforeDonationsAndGroupRelief": to_money(x.profits_before_charges_and_group_relief()),
                 },
-                "ChargeableProfits": to_money(x["ct-comp:TotalProfitsChargeableToCorporationTax"]),
+                "ChargeableProfits": to_money(x.total_profits_chargeable_to_corporation_tax()),
                 "CorporationTaxChargeable": {
                     "FinancialYearOne": {
-                        "Year": x["ct-comp:FinancialYear1CoveredByTheReturn"],
+                        "Year": x.fy1(),
                         "Details": {
-                            "Profit": to_money(x["ct-comp:FY1AmountOfProfitChargeableAtFirstRate"]),
-                            "TaxRate": to_money(x["ct-comp:FY1FirstRateOfTax"]),
-                            "Tax": to_money(x["ct-comp:FY1TaxAtFirstRate"])
+                            "Profit": to_money(x.fy1_profit()),
+                            "TaxRate": to_money(x.fy1_tax_rate()),
+                            "Tax": to_money(x.fy1_tax()),
                         }
                     },
                     "FinancialYearTwo": {
-                        "Year": x["ct-comp:FinancialYear2CoveredByTheReturn"],
+                        "Year": x.fy2(),
                         "Details": {
-                            "Profit": to_money(x["ct-comp:FY2AmountOfProfitChargeableAtFirstRate"]),
-                            "TaxRate": to_money(x["ct-comp:FY2FirstRateOfTax"]),
-                            "Tax": to_money(x["ct-comp:FY2TaxAtFirstRate"])
+                            "Profit": to_money(x.fy2_profit()),
+                            "TaxRate": to_money(x.fy2_tax_rate()),
+                            "Tax": to_money(x.fy2_tax()),
                         }
                     }
                 },
-                "CorporationTax": to_money(x["ct-comp:CorporationTaxChargeable"]),
-                "NetCorporationTaxChargeable": to_money(x["ct-comp:CorporationTaxChargeable"])
+                "CorporationTax": to_money(x.corporation_tax_chargeable()),
+                "NetCorporationTaxChargeable": to_money(x.corporation_tax_chargeable()),
             },
             "CalculationOfTaxOutstandingOrOverpaid": {
-                "NetCorporationTaxLiability": to_money(x["ct-comp:CorporationTaxChargeable"]),
-                "TaxChargeable": to_money(x["ct-comp:TaxChargeable"]),
-                "TaxPayable": to_money(x["ct-comp:TaxPayable"])
+                "NetCorporationTaxLiability": to_money(x.corporation_tax_chargeable()),
+                "TaxChargeable": to_money(x.tax_chargeable()),
+                "TaxPayable": to_money(x.tax_payable()),
             },
             "EnhancedExpenditure": {
                 "SMEclaim": "yes",
-                "RandDEnhancedExpenditure": to_money(x["ct-comp:AdjustmentsAdditionalDeductionForQualifyingRDExpenditureSME"]),
-                "RandDAndCreativeEnhancedExpenditure": to_money(x["ct-comp:AdjustmentsAdditionalDeductionForQualifyingRDExpenditureSME"])
+                "RandDEnhancedExpenditure": to_money(x.sme_rnd_expenditure_deduction()),
+                "RandDAndCreativeEnhancedExpenditure": to_money(x.sme_rnd_expenditure_deduction()),
             },
             "AllowancesAndCharges": {
-                "AIACapitalAllowancesInc": to_money(x["ct-comp:MainPoolAnnualInvestmentAllowance"]),
+                "AIACapitalAllowancesInc": to_money(x.investment_allowance()),
             },
             "Declaration": {
                 "AcceptDeclaration": "yes",
@@ -201,9 +181,9 @@ def to_return(comps, accts, params, atts):
         "IRenvelope": {
             "IRheader": {
                 "Keys": {
-                    "Key": x["ct-comp:TaxReference"]
+                    "Key": x.tax_reference(),
                 },
-                "PeriodEnd": to_date(x["ct-comp:EndOfPeriodCoveredByReturn"]),
+                "PeriodEnd": to_date(x.end()),
                 "Principal": {
                     "Contact": {
                         "Name": {
