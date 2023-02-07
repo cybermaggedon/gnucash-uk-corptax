@@ -389,15 +389,19 @@ class Computations:
             Computation(4, "Type of company").set(self.type_of_company()),
             Computation(30, "Start of return").set(self.start()),
             Computation(35, "End of return").set(self.end()),
-            Computation(40, "Repayments this period"),
+            Computation(40, "Repayments this period").set(False),
             Computation(50, "Making more than one return now"),
             Computation(55, "Estimated figures"),
             Computation(60, "Company part of a group that is not small"),
             Computation(65, "Notice of disclosable avoidance schemes"),
             Computation(70, "Compensating adjustment claimed"),
             Computation(75, "Company qualifies for SME exemption"),
-            Computation(80, "Attached accounts and computations for the period to which this return relates"),
-            Computation(85, "Attached accounts and computations for a different period"),
+            Computation(
+                80, "Attached accounts and computations for this period"
+            ).set(True),
+            Computation(
+                85, "Attached accounts and computations for a different period"
+            ),
             Computation(90, "Reason for not attaching accounts"),
             Computation(95, "CT600A - Loans and arrangements"),
             Computation(100, "CT600B - Controlled foreign companies"),
@@ -412,11 +416,17 @@ class Computations:
             Computation(141, "CT600K - Restitution"),
             Computation(142, "CT600L - R&D"),
             Computation(143, "CT600M - Freeports"),
-            Computation(145, "Total turnover from trade"),
-            Computation(150, "Banks, building societies, insurance companies and other financial concerns"),
-            Computation(155, "Trading profits"),
-            Computation(160, "Trading losses brought forward set against trading profits"),
-            Computation(165, "Net trading profits"),
+            Computation(145, "Total turnover from trade").set(
+                self.turnover_revenue()
+            ),
+            Computation(150, "Banks and other financial concerns"),
+            Computation(155, "Trading profits").set(
+                self.net_trading_profits()
+            ),
+            Computation(160, "Trading losses brought forward against profits"),
+            Computation(165, "Net trading profits").set(
+                self.net_trading_profits()
+            ),
             Computation(170, "Bank, building society or other interest, and profits from non-trading loan relationships"),
             Computation(172, "Box 170 net of carrying back deficit"),
             Computation(175, "Annual payments not otherwise charged to Corporation Tax and from which Income Tax has not been deducted"),
@@ -431,7 +441,9 @@ class Computations:
             Computation(220, "Net chargeable gains"),
             Computation(225, "Losses brought forward against certain investment income"),
             Computation(230, "Non-trade deficits on loan relationships (including interest), and derivative contracts (financial instruments) brought forward set against non-trading profits"),
-            Computation(235, "Profits before other deductions and reliefs"),
+            Computation(235, "Profits before other deductions and reliefs").set(
+                self.profits_before_other_deductions_and_reliefs()
+            ),
             Computation(240, "Losses on unquoted shares"),
             Computation(245, "Management expenses"),
             Computation(250, "UK property business losses for this or previous accounting period"),
@@ -444,36 +456,46 @@ class Computations:
             Computation(285, "Trading losses carried forward and claimed against total profits"),
             Computation(290, "Non-trade capital allowances"),
             Computation(295, "Total of deductions and reliefs"),
-            Computation(300, "Profits before qualifying donations and group relief"),
+            Computation(
+                300, "Profits before qualifying donations and group relief"
+            ).set(
+                self.profits_before_charges_and_group_relief()
+            ),
             Computation(305, "Qualifying donations"),
             Computation(310, "Group relief"),
             Computation(312, "Group relief for carried forward losses"),
-            Computation(315, "Profits chargeable to Corporation Tax"),
+            Computation(315, "Profits chargeable to Corporation Tax").set(
+                self.total_profits_chargeable_to_corporation_tax()
+            ),
             Computation(320, "Ring fence profits included"),
             Computation(325, "Northern Ireland profits included"),
-            Computation(330, "FY1"),
-            Computation(335, "FY1 Profit 1"),
-            Computation(340, "FY1 Rate of Tax 1"),
-            Computation(345, "FY1 Tax 1"),
+            Computation(330, "FY1").set(self.fy1()),
+            Computation(335, "FY1 Profit 1").set(self.fy1_profit()),
+            Computation(340, "FY1 Rate of Tax 1").set(self.fy1_tax_rate()),
+            Computation(345, "FY1 Tax 1").set(self.fy1_tax()),
             Computation(350, "FY1 Profit 2"),
             Computation(355, "FY1 Rate of Tax 2"),
             Computation(360, "FY1 Tax 2"),
             Computation(365, "FY1 Profit 3"),
             Computation(370, "FY1 Rate of Tax 3"),
             Computation(375, "FY1 Tax 3"),
-            Computation(380, "FY2"),
-            Computation(385, "FY2 Profit 1"),
-            Computation(390, "FY2 Rate of Tax 1"),
-            Computation(395, "FY2 Tax 1"),
+            Computation(380, "FY2").set(self.fy2()),
+            Computation(385, "FY2 Profit 1").set(self.fy2_profit()),
+            Computation(390, "FY2 Rate of Tax 1").set(self.fy2_tax_rate()),
+            Computation(395, "FY2 Tax 1").set(self.fy2_tax()),
             Computation(400, "FY2 Profit 2"),
             Computation(405, "FY2 Rate of Tax 2"),
             Computation(410, "FY2 Tax 2"),
             Computation(415, "FY2 Profit 3"),
             Computation(420, "FY2 Rate of Tax 3"),
             Computation(425, "FY2 Tax 3"),
-            Computation(430, "Corporation Tax"),
+            Computation(430, "Corporation Tax").set(
+                self.corporation_tax_chargeable()
+            ),
             Computation(435, "Marginal relief for ring fence trades"),
-            Computation(440, "Corporation Tax chargeable"),
+            Computation(440, "Corporation Tax chargeable").set(
+                self.corporation_tax_chargeable()
+            ),
             Computation(445, "Community Investment relief"),
             Computation(450, "Double Taxation Relief"),
             Computation(455, "Put an X in box 455 if box 450 includes an underlying Rate relief claim"),
@@ -484,7 +506,9 @@ class Computations:
             Computation(472, "CJRS and Job Support Scheme entitlement"),
             Computation(473, "CJRS overpayment already assessed or voluntary disclosed"),
             Computation(474, "Other Coronavirus overpayments"),
-            Computation(475, "Net Corporation Tax liability"),
+            Computation(475, "Net Corporation Tax liability").set(
+                self.corporation_tax_chargeable()
+            ),
             Computation(480, "Tax payable on loans and arrangements to participators"),
             Computation(485, "Put an X in box 485 if you completed box A70 in the supplementary pages CT600A"),
             Computation(490, "CFC tax payable"),
@@ -492,21 +516,31 @@ class Computations:
             Computation(496, "Bank surcharge payable"),
             Computation(500, "CFC tax and bank Levy payable"),
             Computation(505, "Supplementary charge (ring fence trades) payable"),
-            Computation(510, "Tax chargeable"),
+            Computation(510, "Tax chargeable").set(
+                self.tax_chargeable()
+            ),
             Computation(515, "Income Tax deducted from gross income included in profits"),
             Computation(520, "Income Tax repayable to the company"),
             Computation(525, "Self-assessment of tax payable before restitution tax and coronavirus support scheme overpayments"),
             Computation(526, "Coronavirus support schemes overpayment now due"),
             Computation(527, "Restitution tax"),
-            Computation(528, "Self-assessment of tax payable"),
-            Computation(530, "Research and Development credit"),
+            Computation(528, "Self-assessment of tax payable").set(
+                self.tax_payable()
+            ),
+            Computation(530, "Research and Development credit")
+            #.set(
+#                self.sme_rnd_expenditure_deduction()
+            #)
+            ,
             Computation(535, "Not currently used"),
             Computation(540, "Creative tax credit"),
-            Computation(545, "Total of Research and Development credit and creative tax credit"),
+            Computation(
+                545, "Total of R&D credit and creative tax credit"
+            ),
             Computation(550, "Land remediation tax credit"),
             Computation(555, "Life assurance company tax credit"),
             Computation(560, "Total land remediation and life assurance company tax credit"),
-            Computation(565, "Capital allowances first-year tax credit     "),
+            Computation(565, "Capital allowances first-year tax credit"),
             Computation(570, "Surplus Research and Development credits or creative tax credit payable"),
             Computation(575, "Land remediation or life assurance company tax credit payable"),
             Computation(580, "Capital allowances first-year tax credit payable       "),
@@ -528,15 +562,21 @@ class Computations:
             Computation(640, "has written down or sold intangible assets"),
             Computation(645, "has made cross-border royalty payments"),
             Computation(647, "Eat Out to Help Out Scheme: reimbursed discounts included as taxable income"),
-            Computation(650, "Put an X in box 650 if the claim is made by a small or medium-sized enterprise (SME), including a SME subcontractor to a large company"),
+            Computation(650, "Put an X in box 650 if the claim is made by a small or medium-sized enterprise (SME), including a SME subcontractor to a large company").set(True),
             Computation(655, "Put an X in box 655 if the claim is made by a large company"),
-            Computation(660, "R&D enhanced expenditure"),
+            Computation(660, "R&D enhanced expenditure").set(
+                self.sme_rnd_expenditure_deduction()
+            ),
             Computation(665, "Creative enhanced expenditure"),
-            Computation(670, "R&D and creative enhanced expenditure"),
+            Computation(670, "R&D and creative enhanced expenditure").set(
+                self.sme_rnd_expenditure_deduction()
+            ),
             Computation(675, "R&D enhanced expenditure of a SME on work sub contracted to it by a large company"),
             Computation(680, "Vaccines research expenditure"),
             Computation(685, "Enter the total enhanced expenditure"),
-            Computation(690, "Annual investment allowance"),
+            Computation(690, "Annual investment allowance").set(
+                self.investment_allowance()
+            ),
             Computation(691, "Machinery/plant super-deduction — Capital allowances"),
             Computation(692, "Machinery/plant super-deduction — Balancing charges"),
             Computation(693, "Machinery and plant — special rate allowance — Capital allowances"),
@@ -595,7 +635,9 @@ class Computations:
             Computation(775, "Other machinery and plant"),
 
             # Losses, deficits, excess amounts
-            Computation(780, "Losses of trades carried on wholly or partly in the UK (amount)"),
+            Computation(
+                780, "Losses of trades carried on wholly or partly in the UK"
+            ),
             Computation(785, "Losses of trades carried on wholly or partly in the UK (maximum available for surrender as group relief)"),
             Computation(790, "Losses of trades carried on wholly outside the UK (amount)"),
             Computation(795, "Non-trade deficits on loan relationships and derivative contracts (amount)"),
@@ -642,3 +684,4 @@ class Computations:
             Computation(980, "Date"),
             Computation(985, "Status"),
         ]
+
