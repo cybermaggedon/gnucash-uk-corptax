@@ -392,300 +392,253 @@ class Computations:
             Computation(40, "Repayments this period"),
             Computation(50, "Making more than one return now"),
             Computation(55, "Estimated figures"),
+            Computation(60, "Company part of a group that is not small"),
+            Computation(65, "Notice of disclosable avoidance schemes"),
+            Computation(70, "Compensating adjustment claimed"),
+            Computation(75, "Company qualifies for SME exemption"),
+            Computation(80, "Attached accounts and computations for the period to which this return relates"),
+            Computation(85, "Attached accounts and computations for a different period"),
+            Computation(90, "Reason for not attaching accounts"),
+            Computation(95, "CT600A - Loans and arrangements"),
+            Computation(100, "CT600B - Controlled foreign companies"),
+            Computation(105, "CT600C - Group & consortium"),
+            Computation(110, "CT600D - Insurance"),
+            Computation(115, "CT600E - CASCs"),
+            Computation(120, "CT600F - Tonnage tax"),
+            Computation(125, "CT600G - Northern Ireland"),
+            Computation(130, "CT600H - Cross-border royalties"),
+            Computation(135, "CT600I - Ring fence trades"),
+            Computation(140, "CT600J - Tax avoidance schemes"),
+            Computation(141, "CT600K - Restitution"),
+            Computation(142, "CT600L - R&D"),
+            Computation(143, "CT600M - Freeports"),
+            Computation(145, "Total turnover from trade"),
+            Computation(150, "Banks, building societies, insurance companies and other financial concerns"),
+            Computation(155, "Trading profits"),
+            Computation(160, "Trading losses brought forward set against trading profits"),
+            Computation(165, "Net trading profits"),
+            Computation(170, "Bank, building society or other interest, and profits from non-trading loan relationships"),
+            Computation(172, "Box 170 net of carrying back deficit"),
+            Computation(175, "Annual payments not otherwise charged to Corporation Tax and from which Income Tax has not been deducted"),
+            Computation(180, "Non-exempt dividends or distributions from non-UK resident companies"),
+            Computation(185, "Income from which Income Tax has been deducted"),
+            Computation(190, "Income from a property business"),
+            Computation(195, "Non-trading gains on intangible fixed assets"),
+            Computation(200, "Tonnage Tax profits"),
+            Computation(205, "Income not falling under any other heading"),
+            Computation(210, "Gross chargeable gains"),
+            Computation(215, "Allowable losses including losses brought forward"),
+            Computation(220, "Net chargeable gains"),
+            Computation(225, "Losses brought forward against certain investment income"),
+            Computation(230, "Non-trade deficits on loan relationships (including interest), and derivative contracts (financial instruments) brought forward set against non-trading profits"),
+            Computation(235, "Profits before other deductions and reliefs"),
+            Computation(240, "Losses on unquoted shares"),
+            Computation(245, "Management expenses"),
+            Computation(250, "UK property business losses for this or previous accounting period"),
+            Computation(255, "Capital allowances for the purpose of management of the business"),
+            Computation(260, "Non-trade deficits for this accounting period from loan relationships and derivative contracts (financial instruments)"),
+            Computation(263, "Carried forward non-trade deficits from loan relationships and derivative contracts (financial instruments)"),
+            Computation(265, "Non-trading losses on intangible fixed assets"),
+            Computation(275, "Trading losses of this or a later accounting period"),
+            Computation(280, "Put an X in box 280 if amounts carried back from later accounting periods are included in box 275"),
+            Computation(285, "Trading losses carried forward and claimed against total profits"),
+            Computation(290, "Non-trade capital allowances"),
+            Computation(295, "Total of deductions and reliefs"),
+            Computation(300, "Profits before qualifying donations and group relief"),
+            Computation(305, "Qualifying donations"),
+            Computation(310, "Group relief"),
+            Computation(312, "Group relief for carried forward losses"),
+            Computation(315, "Profits chargeable to Corporation Tax"),
+            Computation(320, "Ring fence profits included"),
+            Computation(325, "Northern Ireland profits included"),
+            Computation(330, "FY1"),
+            Computation(335, "FY1 Profit 1"),
+            Computation(340, "FY1 Rate of Tax 1"),
+            Computation(345, "FY1 Tax 1"),
+            Computation(350, "FY1 Profit 2"),
+            Computation(355, "FY1 Rate of Tax 2"),
+            Computation(360, "FY1 Tax 2"),
+            Computation(365, "FY1 Profit 3"),
+            Computation(370, "FY1 Rate of Tax 3"),
+            Computation(375, "FY1 Tax 3"),
+            Computation(380, "FY2"),
+            Computation(385, "FY2 Profit 1"),
+            Computation(390, "FY2 Rate of Tax 1"),
+            Computation(395, "FY2 Tax 1"),
+            Computation(400, "FY2 Profit 2"),
+            Computation(405, "FY2 Rate of Tax 2"),
+            Computation(410, "FY2 Tax 2"),
+            Computation(415, "FY2 Profit 3"),
+            Computation(420, "FY2 Rate of Tax 3"),
+            Computation(425, "FY2 Tax 3"),
+            Computation(430, "Corporation Tax"),
+            Computation(435, "Marginal relief for ring fence trades"),
+            Computation(440, "Corporation Tax chargeable"),
+            Computation(445, "Community Investment relief"),
+            Computation(450, "Double Taxation Relief"),
+            Computation(455, "Put an X in box 455 if box 450 includes an underlying Rate relief claim"),
+            Computation(460, "Put an X in box 460 if box 450 includes any amount carried back from a later period"),
+            Computation(465, "Advance Corporation Tax"),
+            Computation(470, "Total reliefs and deduction in terms of tax"),
+            Computation(471, "CJRS and Job Support Scheme received"),
+            Computation(472, "CJRS and Job Support Scheme entitlement"),
+            Computation(473, "CJRS overpayment already assessed or voluntary disclosed"),
+            Computation(474, "Other Coronavirus overpayments"),
+            Computation(475, "Net Corporation Tax liability"),
+            Computation(480, "Tax payable on loans and arrangements to participators"),
+            Computation(485, "Put an X in box 485 if you completed box A70 in the supplementary pages CT600A"),
+            Computation(490, "CFC tax payable"),
+            Computation(495, "Bank Levy payable"),
+            Computation(496, "Bank surcharge payable"),
+            Computation(500, "CFC tax and bank Levy payable"),
+            Computation(505, "Supplementary charge (ring fence trades) payable"),
+            Computation(510, "Tax chargeable"),
+            Computation(515, "Income Tax deducted from gross income included in profits"),
+            Computation(520, "Income Tax repayable to the company"),
+            Computation(525, "Self-assessment of tax payable before restitution tax and coronavirus support scheme overpayments"),
+            Computation(526, "Coronavirus support schemes overpayment now due"),
+            Computation(527, "Restitution tax"),
+            Computation(528, "Self-assessment of tax payable"),
+            Computation(530, "Research and Development credit"),
+            Computation(535, "Not currently used"),
+            Computation(540, "Creative tax credit"),
+            Computation(545, "Total of Research and Development credit and creative tax credit"),
+            Computation(550, "Land remediation tax credit"),
+            Computation(555, "Life assurance company tax credit"),
+            Computation(560, "Total land remediation and life assurance company tax credit"),
+            Computation(565, "Capital allowances first-year tax credit     "),
+            Computation(570, "Surplus Research and Development credits or creative tax credit payable"),
+            Computation(575, "Land remediation or life assurance company tax credit payable"),
+            Computation(580, "Capital allowances first-year tax credit payable       "),
+            Computation(585, "Ring fence Corporation Tax included and 590 Ring fence supplementary charge included"),
+            Computation(586, "NI Corporation Tax included"),
+            Computation(595, "Tax already paid (and not already repaid)"),
+            Computation(600, "Tax outstanding"),
+            Computation(605, "Tax overpaid including surplus or payable credits"),
+            Computation(610, "Group tax refunds surrendered to this company"),
+            Computation(615, "Research and Development expenditure credits surrendered to this company"),
+            Computation(616, "Export: Yes — goods"),
+            Computation(617, "Export: Yes — services"),
+            Computation(618, "Export: No — neither"),
+            Computation(620, "Franked investment income/exempt ABGH distributions"),
+            Computation(625, "Number of 51% group companies"),
+            Computation(630, "should have made (whether it has or not) instalment payments as a large company under the Corporation Tax (instalment Payments) Regulations 1998"),
+            Computation(631, "Should have made (whether it has or not) instalment payments as a very large company under the Corporation Tax (instalment Payments) Regulations 1998"),
+            Computation(635, "is within a group payments arrangement for the period"),
+            Computation(640, "has written down or sold intangible assets"),
+            Computation(645, "has made cross-border royalty payments"),
+            Computation(647, "Eat Out to Help Out Scheme: reimbursed discounts included as taxable income"),
+            Computation(650, "Put an X in box 650 if the claim is made by a small or medium-sized enterprise (SME), including a SME subcontractor to a large company"),
+            Computation(655, "Put an X in box 655 if the claim is made by a large company"),
+            Computation(660, "R&D enhanced expenditure"),
+            Computation(665, "Creative enhanced expenditure"),
+            Computation(670, "R&D and creative enhanced expenditure"),
+            Computation(675, "R&D enhanced expenditure of a SME on work sub contracted to it by a large company"),
+            Computation(680, "Vaccines research expenditure"),
+            Computation(685, "Enter the total enhanced expenditure"),
+            Computation(690, "Annual investment allowance"),
+            Computation(691, "Machinery/plant super-deduction — Capital allowances"),
+            Computation(692, "Machinery/plant super-deduction — Balancing charges"),
+            Computation(693, "Machinery and plant — special rate allowance — Capital allowances"),
+            Computation(694, "Machinery and plant — special rate allowance — Balancing charges"),
 
-            60 Company part of a group that is not small
-65 Notice of disclosable avoidance schemes
-70 Compensating adjustment claimed
-75 Company qualifies for SME exemption
-80, 85 and 90 Accounts and computations
-145 Total turnover from trade
-150 Banks, building societies, insurance companies and other financial concerns
-155 Trading profits
-160 Trading losses brought forward set against trading profits
-165 Net trading profits
-170 and 172 Bank, building society or other interest, and profits from non-trading loan relationships
-175 Annual payments not otherwise charged to Corporation Tax and from which Income Tax has not been deducted
-180 Non-exempt dividends or distributions from non-UK resident companies
-185 Income from which Income Tax has been deducted
-190 Income from a property business
-195 Non-trading gains on intangible fixed assets
-200 Tonnage Tax profits
-205 Income not falling under any other heading
-210 Gross chargeable gains
-215 Allowable losses including losses brought forward
-220 Net chargeable gains
-225 Losses brought forward against certain investment income
-230 Non-trade deficits on loan relationships (including interest), and derivative contracts (financial instruments) brought forward set against non-trading profits
-235 Profits before other deductions and reliefs
-240 Losses on unquoted shares
-245 Management expenses
-250 UK property business losses for this or previous accounting period
-255 Capital allowances for the purpose of management of the business
-260 Non-trade deficits for this accounting period from loan relationships and derivative contracts (financial instruments)
-263 Carried forward non-trade deficits from loan relationships and derivative contracts (financial instruments)
-265 Non-trading losses on intangible fixed assets
-275 Trading losses of this or a later accounting period
-280 Put an X in box 280 if amounts carried back from later accounting periods are included in box 275
-285 Trading losses carried forward and claimed against total profits
-290 Non-trade capital allowances
-295 Total of deductions and reliefs
-300 Profits before qualifying donations and group relief
-305 Qualifying donations
-310 Group relief
+            Computation(695, "Machinery and plant — special rate pool - Capital allowance"),
+            Computation(700, "Machinery and plant — special rate pool - Balancing charges"),
 
-312 Group relief for carried forward losses
+            Computation(705, "Machinery and plant — main pool - Capital allowance"),
+            Computation(710, "Machinery and plant — main pool - Balancing charges"),
+            Computation(711, "Structures and buildings - Capital allowances"),
+            Computation(715, "Business premises renovation - Capital allowances"),
+            Computation(720, "Business premises renovation - Balancing charges"),
+            Computation(725, "Other allowances and charges - Capital allowances"),
+            Computation(730, "Other allowances and charges - Balancing charges"),
+            Computation(713, "Electric charge points - Capital allowances"),
+            Computation(714, "Electric charge points - Balancing charges"),
+            Computation(721, "Enterprise zones - Capital allowances"),
+            Computation(722, "Enterprise zones - Balancing charges"),
+            Computation(723, "Zero emissions goods vehicles - Capital allowances"),
+            Computation(724, "Zero emissions goods vehicles - Balancing charges"),
+            Computation(726, "Zero emissions cars - Capital allowances"),
+            Computation(727, "Zero emissions cars - Balancing charges"),
+
+            # Not included:
+            Computation(735, "Annual Investment Allowance - Capital allowances"),
             
-315 Profits chargeable to Corporation Tax
-            
-320 Ring fence profits included
-325 Northern Ireland profits included
-
-Boxes 330 to 425
-
-
-
-430 Corporation Tax
-435 Marginal relief for ring fence trades
-440 Corporation Tax chargeable
-       445 Community Investment relief
-
-450 Double Taxation Relief
-455 Put an X in box 455 if box 450 includes an underlying Rate relief claim
-460 Put an X in box 460 if box 450 includes any amount carried back from a later period
-465 Advance Corporation Tax
-            
-470 Total reliefs and deduction in terms of tax
-
-471 CJRS and Job Support Scheme received
-472 CJRS and Job Support Scheme entitlement
-473 CJRS overpayment already assessed or voluntary disclosed
-        474 Other Coronavirus overpayments
-
-
-Box 526 Coronavirus support schemes overpayment now due: £8,000
-
-475 Net Corporation Tax liability
-
-480 Tax payable on loans and arrangements to participators
-
-485 Put an X in box 485 if you completed box A70 in the supplementary pages CT600A
-
-
-490 CFC tax payable
-495 Bank Levy payable
-            496 Bank surcharge payable
-            500 CFC tax and bank Levy payable
-            505 Supplementary charge (ring fence trades) payable
-510 Tax chargeable
-515 Income Tax deducted from gross income included in profits
-520 Income Tax repayable to the company
-
-525 Self-assessment of tax payable before restitution tax and coronavirus support scheme overpayments
-526 Coronavirus support schemes overpayment now due
-
-527 Restitution tax
-528 Self-assessment of tax payable
-
-            530 Research and Development credit
-            535
-540 Creative tax credit
-545 Total of Research and Development credit and creative tax credit
-550 Land remediation tax credit
-
-555 Life assurance company tax credit
-
-560 Total land remediation and life assurance company tax credit
-
-       565 Capital allowances first-year tax credit     
-570 Surplus Research and Development credits or creative tax credit payable
-575 Land remediation or life assurance company tax credit payable
-
-     580 Capital allowances first-year tax credit payable       
-585 Ring fence Corporation Tax included and 590 Ring fence supplementary charge included
-           586 NI Corporation Tax included
-595 Tax already paid (and not already repaid)
-
-600 Tax outstanding
-
-605 Tax overpaid including surplus or payable credits
-
-610 Group tax refunds surrendered to this company
-615 Research and Development expenditure credits surrendered to this company
-
-616 Yes — goods
-617 Yes — services
-618 No — neither
-
-620 Franked investment income/exempt ABGH distributions
-625 Number of 51% group companies
-
-630 should have made (whether it has or not) instalment payments as a large company under the Corporation Tax (instalment Payments) Regulations 1998
-
-631 Should have made (whether it has or not) instalment payments as a very large company under the Corporation Tax (instalment Payments) Regulations 1998
-
-
-635 is within a group payments arrangement for the period
-
-640 has written down or sold intangible assets
-
-645 has made cross-border royalty payments
-            
-            647 Eat Out to Help Out Scheme: reimbursed discounts included as taxable income
-
-650 Put an X in box 650 if the claim is made by a small or medium-sized enterprise (SME), including a SME subcontractor to a large company
-
-655 Put an X in box 655 if the claim is made by a large company
-
-
-            660 R&D enhanced expenditure
-665 Creative enhanced expenditure
-
-670 R&D and creative enhanced expenditure
-675 R&D enhanced expenditure of a SME on work sub contracted to it by a large company
-
-680 Vaccines research expenditure
-685 Enter the total enhanced expenditure
-            
-            690 Annual investment allowance
-691 and 692 Machinery and plant — super-deduction
-
-693 and 694 Machinery and plant — special rate allowance
-          695 and 700 Machinery and plant — special rate pool
-705 and 710 Machinery and plant — main pool
-
-711 Structures and buildings
-715 and 720 Business premises renovation
-725 and 730 Other allowances and charges
-713 and 714 Electric charge points
-721 and 722 Enterprise zones
-
-723 and 724 Zero emissions goods vehicles
-
-726 and 727 Zero emissions cars
-735 Annual Investment Allowance
-            
-736 Structures and buildings
-
-740 and 745 Business premises renovation
-
-
-
-741 and 742 Machinery and plant — super-deduction
-      743 and 744 Machinery and plant — special rate allowance      
-           750 and 755 Other allowances and charges
-737 and 738 Electric charge points
-746 and 747 Enterprise Zones
-
-748 and 749 Zero emissions goods vehicles
-
-751 and 752 Zero emissions cars
-         760 Machinery and plant on which first-year allowance is claimed
-765 Designated environmentally friendly machinery and plant
-
-770 Machinery and plant on long-life assets and integral features
-771 Structures and buildings
-772 Machinery and plant — super-deduction
-
-773 Machinery and plant — special rate allowance
-
-775 Other machinery and plant
-
-
-780 Losses of trades carried on wholly or partly in the UK (amount)
-            785 Losses of trades carried on wholly or partly in the UK (maximum available for surrender as group relief)
-
-
-790 Losses of trades carried on wholly outside the UK (amount)
-            
-795 Non-trade deficits on loan relationships and derivative contracts (amount)
-800 Non-trade deficits on loan relationships and derivative contracts (maximum available for surrender as group relief)
-
-805 UK property business losses (amount)
-            
-810 UK property business losses (maximum available for surrender as group relief)
-815 Overseas property business losses (amount)
-
-
-            820 Losses from miscellaneous transactions (amount)
-
-
-825 Capital losses (amount)
-
-
-830 Non-trading losses on intangible fixed assets (amount)
-
-835 Non-trading losses on intangible fixed assets (maximum available for surrender as group relief)
-
-
-
-
-
-
-
-
-
-
-
-840 Non-trade capital allowances (maximum available for surrender as group relief)
-845 Qualifying donations (maximum available for surrender as group relief)
-            
-850 Management expenses (amount)855 Management expenses (maximum available for surrender as group relief)
-
-
-Leave this section (boxes 856 to 858) blank.
-860 Small Repayments
-
-
-            
-865 Repayment of Corporation Tax
-
-
-870 Repayment of Income Tax
-
-875 Payable Research and Development Tax Credit
-
-            
-880 Payable research and development expenditure credit
-885 Payable creative tax credit
-
-890 Payable land remediation or life assurance company tax credit
-
-
-
-
-895 Payable capital allowances first-year tax credit
-
-            900 The following amount is to be surrendered
-
-
-            
-905 Joint notice is attached
-910 Joint notice will follow
-            
-915 Please stop repayment of the following amount until we send you the Notice
-920 Name of bank or building society
-
-925 Branch sort code
-
-930 Account number
-
-
-935 Name of account
-
-
-
-          940 Building society reference
-
-            
-
-            
-
-    945: enter your status, for example company secretary or authorised agent
-    950: enter the name of your company
-    955: enter the name of the nominated person
-    960: enter the address of the nominated person
-    965: enter your reference for the nominated person
-    970: enter your name
-975 Name
-980 Date
-985 Status
+            Computation(736, "Structures and buildings"),
+            Computation(740, "Business premises renovation - Capital allowances"),
+            Computation(745, "Business premises renovation - Balancing charges"),
+
+            Computation(741, "Machinery and plant — super-deduction - Capital allowances"),
+            Computation(742, "Machinery and plant — super-deduction - Balancing charges"),
+            Computation(743, "Machinery and plant — special rate allowance - Capital allowances"),
+            Computation(744, "Machinery and plant — special rate allowance - Balancing charges"),
+            Computation(750, "Other allowances and charges - Capital allowances"),
+            Computation(755, "Other allowances and charges - Balancing charges"),
+            Computation(737, "Electric charge points - Capital allowances"),
+            Computation(738, "Electric charge points - Balancing charges"),
+
+            Computation(746, "Enterprise Zones - Capital allowances"),
+            Computation(747, "Enterprise Zones - Balancing charges"),
+
+            Computation(748, "Zero emissions goods vehicles - Capital allowances"),
+            Computation(749, "Zero emissions goods vehicles - Balancing charges"),
+            Computation(751, "Zero emissions cars - Capital allowances"),
+            Computation(752, "Zero emissions cars - Balancing charges"),
+
+            # Qualifying expenditure
+            Computation(760, "Machinery and plant on which first-year allowance is claimed"),
+            Computation(765, "Designated environmentally friendly machinery and plant"),
+            Computation(770, "Machinery and plant on long-life assets and integral features"),
+            Computation(771, "Structures and buildings"),
+            Computation(772, "Machinery and plant — super-deduction"),
+            Computation(773, "Machinery and plant — special rate allowance"),
+            Computation(775, "Other machinery and plant"),
+
+            # Losses, deficits, excess amounts
+            Computation(780, "Losses of trades carried on wholly or partly in the UK (amount)"),
+            Computation(785, "Losses of trades carried on wholly or partly in the UK (maximum available for surrender as group relief)"),
+            Computation(790, "Losses of trades carried on wholly outside the UK (amount)"),
+            Computation(795, "Non-trade deficits on loan relationships and derivative contracts (amount)"),
+            Computation(800, "Non-trade deficits on loan relationships and derivative contracts (maximum available for surrender as group relief)"),
+            Computation(805, "UK property business losses (amount)"),
+            Computation(810, "UK property business losses (maximum available for surrender as group relief)"),
+            Computation(815, "Overseas property business losses (amount)"),
+            Computation(820, "Losses from miscellaneous transactions (amount)"),
+            Computation(825, "Capital losses (amount)"),
+            Computation(830, "Non-trading losses on intangible fixed assets (amount)"),
+            Computation(835, "Non-trading losses on intangible fixed assets (maximum available for surrender as group relief)"),
+            Computation(840, "Non-trade capital allowances (maximum available for surrender as group relief)"),
+            Computation(845, "Qualifying donations (maximum available for surrender as group relief)"),
+            Computation(850, "Management expenses (amount)855 Management expenses (maximum available for surrender as group relief)"),
+
+            # Northern Ireland, leave blank
+            Computation(856, "Amount of group relief claimed which relates to NI trading losses used against rest of UK/mainstream profits"),
+            Computation(857, "Amount of group relief claimed which relates to NI trading losses used against NI trading profits"),
+            Computation(858, "Amount of group relief claimed which relates to rest of UK/mainstream losses used against NI trading profits"),
+            Computation(860, "Small Repayments"),
+            Computation(865, "Repayment of Corporation Tax"),
+            Computation(870, "Repayment of Income Tax"),
+            Computation(875, "Payable Research and Development Tax Credit"),
+            Computation(880, "Payable research and development expenditure credit"),
+            Computation(885, "Payable creative tax credit"),
+            Computation(890, "Payable land remediation or life assurance company tax credit"),
+            Computation(895, "Payable capital allowances first-year tax credit"),
+            Computation(900, "The following amount is to be surrendered"),
+            Computation(905, "Joint notice is attached"),
+            Computation(910, "Joint notice will follow"),
+            Computation(915, "Please stop repayment of the following amount until we send you the Notice"),
+            Computation(920, "Name of bank or building society"),
+            Computation(925, "Branch sort code"),
+            Computation(930, "Account number"),
+            Computation(935, "Name of account"),
+            Computation(940, "Building society reference"),
+            Computation(945, "enter your status, for example company secretary or authorised agent"),
+            Computation(950, "enter the name of your company"),
+            Computation(955, "enter the name of the nominated person"),
+            Computation(960, "enter the address of the nominated person"),
+            Computation(965, "enter your reference for the nominated person"),
+            Computation(970, "enter your name"),
+            Computation(975, "Name"),
+            Computation(980, "Date"),
+            Computation(985, "Status"),
+        ]
