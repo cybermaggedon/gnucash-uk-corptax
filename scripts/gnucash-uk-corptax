@@ -115,8 +115,21 @@ else:
 if args.output_values:
     vals = to_values(comps)
 
-    for k, v in vals.items():
-        print("%-50s: %s" % (k, str(v)))
+#    for k, v in vals.items():
+#        print(
+#            "%-45s: %s" % (k, v)
+#        )
+#    sys.exit(0)
+
+
+    for c in vals:
+
+        if c.value is None: continue
+        
+        print(
+            "%-4d %-45s: %s" % (c.box, c.description[:44], str(c.value)[:20])
+        )
+
     sys.exit(0)
 
 ret = to_return(comps, accts, params, atts)
