@@ -40,7 +40,11 @@ def get_comps(comps):
     return c
 
 def to_values(comps):
+
     c = get_comps(comps)
+
+    values = c.values()
+    return values
 
     return {
         "start": c.start(),
@@ -48,7 +52,7 @@ def to_values(comps):
         "company_name": c.company_name(),
         "tax_reference": c.tax_reference(),
         "company_number": c.company_number(),
-        "gross_profit_loss": c.gross_profit_loss(),
+        "gross_profit_loss": c.net_trading_profits(),
         "turnover_revenue": c.turnover_revenue(),
         "adjusted_trading_profit": c.adjusted_trading_profit(),
         "net_trading_profits": c.net_trading_profits(),
@@ -71,136 +75,171 @@ def to_values(comps):
         "investment_allowance": c.investment_allowance(),
     }
     
+def company_info(params, x):
+    return {
+        "CompanyName": x.company_name(),
+        "RegistrationNumber": x.company_number(),
+        "Reference": x.tax_reference(),
+        "CompanyType": params.get("company-type"),
+        "PeriodCovered": {
+            "From": to_date(x.start()),
+            "To": to_date(x.end()),
+        }
+    }
 
-def to_return(comps, accts, params, atts):
+def return_info(x):
+    return {
+        "ThisPeriod": "yes",
+        "Accounts": {
+            "ThisPeriodAccounts": "yes"
+        },
+        "Computations": {
+            "ThisPeriodComputations": "yes"
+        },
+        "SupplementaryPages": {
+        }
+    }
 
-    x = get_comps(comps)
+def company_tax_calculation(x):
+    return {
+        "Income": {
+            "Trading": {
+                "Profits": to_money(x.adjusted_trading_profit()),
+                "NetProfits": to_money(x.net_trading_profits()),
+            },
+        },
+        "ChargeableGains": {
+            "NetChargeableGains": to_money(x.net_chargeable_gains()),
+        },
+        "ProfitsBeforeOtherDeductions": to_money(x.profits_before_other_deductions_and_reliefs()),
+        "ChargesAndReliefs": {
+            "ProfitsBeforeDonationsAndGroupRelief": to_money(x.profits_before_charges_and_group_relief()),
+        },
+        "ChargeableProfits": to_money(x.total_profits_chargeable_to_corporation_tax()),
+        "CorporationTaxChargeable": {
+            "FinancialYearOne": {
+                "Year": x.fy1(),
+                "Details": {
+                    "Profit": to_money(x.fy1_profit()),
+                    "TaxRate": to_money(x.fy1_tax_rate()),
+                    "Tax": to_money(x.fy1_tax()),
+                }
+            },
+            "FinancialYearTwo": {
+                "Year": x.fy2(),
+                "Details": {
+                    "Profit": to_money(x.fy2_profit()),
+                    "TaxRate": to_money(x.fy2_tax_rate()),
+                    "Tax": to_money(x.fy2_tax()),
+                }
+            }
+        },
+        "CorporationTax": to_money(x.corporation_tax_chargeable()),
+        "NetCorporationTaxChargeable": to_money(x.corporation_tax_chargeable()),
+    }
+
+def tax_outstanding(x):
+    return {
+        "NetCorporationTaxLiability": to_money(x.corporation_tax_chargeable()),
+        "TaxChargeable": to_money(x.tax_chargeable()),
+        "TaxPayable": to_money(x.tax_payable()),
+    }
+
+def attached_files(comps, accts):
 
     comp_ixbrl = base64.b64encode(comps).decode("utf-8")
     accounts_ixbrl = base64.b64encode(accts).decode("utf-8")
 
-    ret = {
-        "CompanyTaxReturn": {
-            "CompanyInformation": {
-                "CompanyName": x.company_name(),
-                "RegistrationNumber": x.company_number(),
-                "Reference": x.tax_reference(),
-                "CompanyType": params.get("company-type"),
-                "PeriodCovered": {
-                    "From": to_date(x.start()),
-                    "To": to_date(x.end()),
+    return {
+        "XBRLsubmission": {
+            "Computation": {
+                "Instance": {
+                    "EncodedInlineXBRLDocument": comp_ixbrl
                 }
             },
-            "ReturnInfoSummary": {
-                "ThisPeriod": "yes",
-                "Accounts": {
-                    "ThisPeriodAccounts": "yes"
-                },
-                "Computations": {
-                    "ThisPeriodComputations": "yes"
-                },
-                "SupplementaryPages": {
-                }
-            },
-            "Turnover": {
-                "Total": to_money(x.turnover_revenue()),
-            },
-            "CompanyTaxCalculation": {
-                "Income": {
-                    "Trading": {
-                        "Profits": to_money(x.adjusted_trading_profit()),
-                        "NetProfits": to_money(x.net_trading_profits()),
-                    },
-#                    "NonTradingLoanProfitsAndGains": to_money(0),
-                },
-                "ChargeableGains": {
-                    "NetChargeableGains": to_money(x.net_chargeable_gains()),
-                },
-                "ProfitsBeforeOtherDeductions": to_money(x.profits_before_other_deductions_and_reliefs()),
-                "ChargesAndReliefs": {
-                    "ProfitsBeforeDonationsAndGroupRelief": to_money(x.profits_before_charges_and_group_relief()),
-                },
-                "ChargeableProfits": to_money(x.total_profits_chargeable_to_corporation_tax()),
-                "CorporationTaxChargeable": {
-                    "FinancialYearOne": {
-                        "Year": x.fy1(),
-                        "Details": {
-                            "Profit": to_money(x.fy1_profit()),
-                            "TaxRate": to_money(x.fy1_tax_rate()),
-                            "Tax": to_money(x.fy1_tax()),
-                        }
-                    },
-                    "FinancialYearTwo": {
-                        "Year": x.fy2(),
-                        "Details": {
-                            "Profit": to_money(x.fy2_profit()),
-                            "TaxRate": to_money(x.fy2_tax_rate()),
-                            "Tax": to_money(x.fy2_tax()),
-                        }
-                    }
-                },
-                "CorporationTax": to_money(x.corporation_tax_chargeable()),
-                "NetCorporationTaxChargeable": to_money(x.corporation_tax_chargeable()),
-            },
-            "CalculationOfTaxOutstandingOrOverpaid": {
-                "NetCorporationTaxLiability": to_money(x.corporation_tax_chargeable()),
-                "TaxChargeable": to_money(x.tax_chargeable()),
-                "TaxPayable": to_money(x.tax_payable()),
-            },
-            "EnhancedExpenditure": {
-                "SMEclaim": "yes",
-                "RandDEnhancedExpenditure": to_money(x.sme_rnd_expenditure_deduction()),
-                "RandDAndCreativeEnhancedExpenditure": to_money(x.sme_rnd_expenditure_deduction()),
-            },
-            "AllowancesAndCharges": {
-                "AIACapitalAllowancesInc": to_money(x.investment_allowance()),
-            },
-            "Declaration": {
-                "AcceptDeclaration": "yes",
-                "Name": params.get("declaration-name"),
-                "Status": params.get("declaration-status")
-            },
-            "AttachedFiles": {
-                "XBRLsubmission": {
-                    "Computation": {
-                        "Instance": {
-                            "EncodedInlineXBRLDocument": comp_ixbrl
-                        }
-                    },
-                    "Accounts": {
-                        "Instance": {
-                            "EncodedInlineXBRLDocument": accounts_ixbrl
-                        }
-                    }
+            "Accounts": {
+                "Instance": {
+                    "EncodedInlineXBRLDocument": accounts_ixbrl
                 }
             }
         }
     }
 
+def turnover(x):
+    return {
+        "Total": to_money(x.turnover_revenue()),
+    }
+
+def allowances_and_charges(x):
+    return {
+        "AIACapitalAllowancesInc": to_money(x.investment_allowance()),
+    }
+
+def declaration(params):
+    return {
+        "AcceptDeclaration": "yes",
+        "Name": params.get("declaration-name"),
+        "Status": params.get("declaration-status")
+    }
+
+def company_tax_return(params, x, comps, accts):
+    return {
+        "CompanyInformation": company_info(params, x),
+        "ReturnInfoSummary": return_info(x),
+        "Turnover": turnover(x),
+        "CompanyTaxCalculation": company_tax_calculation(x),
+        "CalculationOfTaxOutstandingOrOverpaid": tax_outstanding(x),    
+        "EnhancedExpenditure": {},
+        "AllowancesAndCharges": allowances_and_charges(x),
+        "Declaration": declaration(params),
+        "AttachedFiles": attached_files(comps, accts)
+    }
+
+def irheader(params, x):
+    return {
+        "Keys": {
+            "Key": x.tax_reference(),
+        },
+        "PeriodEnd": to_date(x.end()),
+        "Principal": {
+            "Contact": {
+                "Name": {
+                    "Ttl": params.get("title"),
+                    "Fore": params.get("first-name"),
+                    "Sur": params.get("second-name")
+                },
+                "Email": params.get("email"),
+                "Telephone": {
+                    "Number": params.get("phone")
+                }
+            }
+        },
+        "IRmark": "",
+        "Sender": "Company"
+    }
+
+def enhanced_expenditure(x):
+    rnd = x.sme_rnd_expenditure_deduction()
+    return {
+        "SMEclaim": "yes",
+        "RandDEnhancedExpenditure": to_money(rnd),
+        "RandDAndCreativeEnhancedExpenditure": to_money(rnd),
+    }        
+
+def to_return(comps, accts, params, atts):
+
+    x = get_comps(comps)
+
+    cret = company_tax_return(params, x, comps, accts)
+
+    rnd = x.sme_rnd_expenditure_deduction()
+    if rnd > 0:
+        cret["EnhancedExpenditure"] = enhanced_expenditure(x)
+
     ret = {
         "IRenvelope": {
-            "IRheader": {
-                "Keys": {
-                    "Key": x.tax_reference(),
-                },
-                "PeriodEnd": to_date(x.end()),
-                "Principal": {
-                    "Contact": {
-                        "Name": {
-                            "Ttl": params.get("title"),
-                            "Fore": params.get("first-name"),
-                            "Sur": params.get("second-name")
-                        },
-                        "Email": params.get("email"),
-                        "Telephone": {
-                            "Number": params.get("phone")
-                        }
-                    }
-                },
-                "IRmark": "",
-                "Sender": "Company"
-            },
-            "CompanyTaxReturn": ret["CompanyTaxReturn"]
+            "IRheader": irheader(params, x),
+            "CompanyTaxReturn": cret
         }
     }
 
