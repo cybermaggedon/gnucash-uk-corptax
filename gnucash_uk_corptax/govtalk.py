@@ -223,7 +223,7 @@ class GovTalkMessage(Message):
                 hdr.remove(mark)
 
         pre = io.BytesIO()
-        ET.ElementTree(bc).write(pre, encoding="unicode", xml_declaration=False)
+        ET.ElementTree(bc).write(pre, encoding="utf-8", xml_declaration=False)
         i = irmark.compute(pre.getvalue())
 
         return i
