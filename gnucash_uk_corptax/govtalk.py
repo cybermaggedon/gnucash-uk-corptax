@@ -63,7 +63,7 @@ class Message:
 
     def toxml(self, tree):
         buf = io.StringIO()
-        msg.write(buf, encoding="unicode", xml_declaration=True)
+        msg.write(buf, encoding="utf-8", xml_declaration=True)
         return buf.getvalue()
 
     def encode(self, root):
