@@ -187,6 +187,7 @@ class CorptaxReturn:
         }
 
     def attached_files(self):
+        return {}
 
         comp_ixbrl = base64.b64encode(self.comps).decode("utf-8")
         accounts_ixbrl = base64.b64encode(self.accts).decode("utf-8")
@@ -219,6 +220,122 @@ class CorptaxReturn:
 
     def get_return(self):
 
+        obj = {}
+
+        handling = {
+            "4": lambda x: "%02d" % x,
+            "5": lambda x: "Yes" if x else "No",
+            "6": lambda x: "Yes" if x else "No",
+            "7": lambda x: "Yes" if x else "No",
+            "8": lambda x: "Yes" if x else "No",
+            "30": lambda x: str(x),
+            "35": lambda x: str(x),
+            "40": lambda x: "Yes" if x else "No",
+            "45": lambda x: "Yes" if x else "No",
+            "50": lambda x: "Yes" if x else "No",
+            "55": lambda x: "Yes" if x else "No",
+            "60": lambda x: "Yes" if x else "No",
+            "65": lambda x: "Yes" if x else "No",
+            "70": lambda x: "Yes" if x else "No",
+            "75": lambda x: "Yes" if x else "No",
+            "80": lambda x: "Yes" if x else "No",
+            "85": lambda x: "Yes" if x else "No",
+            "95": lambda x: "Yes" if x else "No",
+            "100": lambda x: "Yes" if x else "No",
+            "105": lambda x: "Yes" if x else "No",
+            "110": lambda x: "Yes" if x else "No",
+            "115": lambda x: "Yes" if x else "No",
+            "120": lambda x: "Yes" if x else "No",
+            "125": lambda x: "Yes" if x else "No",
+            "130": lambda x: "Yes" if x else "No",
+            "135": lambda x: "Yes" if x else "No",
+            "140": lambda x: "Yes" if x else "No",
+            "141": lambda x: "Yes" if x else "No",
+            "142": lambda x: "Yes" if x else "No",
+            "150": lambda x: "Yes" if x else "No",
+        }
+
+        ci = ["CompanyInformation"]
+        cini = ci + ["NorthernIreland"]
+        cipc = ci + ["PeriodCovered"]
+        ris = ["ReturnInfoSummary"]
+        ris_tp = ris + ["TransferPricing"]
+        ris_a = ris + ["Accounts"]
+        ris_c = ris + ["Computations"]
+        sp = ris + ["SupplementaryPages"]
+        tvr = ["Turnover"]
+        ctc = ["CompanyTaxCalculation"]
+        ctc_i = ctc + ["Income"]
+        ctc_i_t = ctc_i + ["Trading"]
+
+        mapping = {
+            "1": [ci + ["CompanyName"]],
+            "2": [ci + ["RegistrationNumber"]],
+            "3": [ci + ["Reference"]],
+            "4": [ci + ["CompanyType"]],
+            "5": [cini + ["NItradingActivity"]],
+            "6": [cini + ["SME"]],
+            "7": [cini + ["NIemployer"]],
+            "8": [cini + ["SpecialCircumstances"]],
+            "30": [cipc + ["From"]],
+            "35": [cipc + ["To"]],
+            "40": [ris + ["ThisPeriod"]],
+            "45": [ris + ["EarlierPeriod"]],
+            "50": [ris + ["MultipleReturns"]],
+            "55": [ris + ["ProvisionalFigures"]],
+            "60": [ris + ["PartOfNonSmallGroup"]],
+            "65": [ris + ["RegisteredAvoidanceScheme"]],
+            "70": [ris_tp + ["Adjustment"]],
+            "75": [ris_tp + ["SME"]],
+            "80": [
+                ris_a + ["ThisPeriodAccounts"],
+                ris_c + ["ThisPeriodAccounts"]
+            ],
+            "85": [
+                ris_a + ["DifferentPeriod"],
+                ris_c + ["DifferentPeriod"]
+            ],
+            "90": [
+                ris_a + ["NoAccountsReason"],
+                ris_c + ["NoComputationsReason"],
+            ],
+            "95": [sp + ["CT600A"]],
+            "100": [sp + ["CT600B"]],
+            "105": [sp + ["CT600C"]],
+            "110": [sp + ["CT600D"]],
+            "115": [sp + ["CT600E"]],
+            "120": [sp + ["CT600F"]],
+            "125": [sp + ["CT600G"]],
+            "130": [sp + ["CT600H"]],
+            "135": [sp + ["CT600I"]],
+            "140": [sp + ["CT600J"]],
+            "141": [sp + ["CT600K"]],
+            "142": [sp + ["CT600L"]],
+            "145": [tvr + ["Total"]],
+            "150": [tvr + ["OtherFinancialConcerns"]],
+            "155": [ctc_i_t + ["Profits"]],
+            "160": [ctc_i_t + ["LossesBroughtForward"]],
+            "165": [ctc_i_t + ["NetProfits"]],
+            "170": [ctc_i_t + ["NonTradingLoanProfitsAndGains"]],
+            "172": [ctc_i_t + ["IncomeStatedNet"]],
+       }
+
+        for id, value in self.form_values["ct600"].items():
+            id = str(id)
+            if id in handling:
+                value = handling[id](value)
+            if id in mapping:
+                eltslists = mapping[id]
+                for elts in eltslists:
+                    cur = obj
+                    for elt in elts[:-1]:
+                        if elt not in cur:
+                            cur[elt] = {}
+                        cur = cur[elt]
+                    cur[elts[-1]] = value
+
+        return obj
+
         ctr = {
             "CompanyInformation": self.company_info(),
             "ReturnInfoSummary": self.return_info(),
@@ -230,6 +347,8 @@ class CorptaxReturn:
             "Declaration": self.declaration(),
             "AttachedFiles": self.attached_files()
         }
+
+        return ctr
 
         ret = {
             "IRenvelope": {
