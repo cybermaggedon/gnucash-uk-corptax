@@ -230,7 +230,13 @@ class CorptaxReturn:
 
             def present(self, obj):
                 if self.id in obj.form_values["ct600"]:
+
+                    value = obj.form_values["ct600"][self.id]
+                    if value == None:
+                        return False
+
                     return True
+
                 return False
 
             def fetch(self, obj):
@@ -376,23 +382,19 @@ class CorptaxReturn:
                 "CorporationTaxChargeable": {
                     "FinancialYearOne": {
                         "Year": Box(330, kind="year"),
-                        "Details": [
-                            {
-                                "Profit": Box(335),
-                                "TaxRate": Box(340),
-                                "Tax": Box(345)
-                            }
-                        ]
+                        "Details": {
+                            "Profit": Box(335),
+                            "TaxRate": Box(340),
+                            "Tax": Box(345)
+                        }
                     },
                     "FinancialYearTwo": {
                         "Year": Box(380, kind="year"),
-                        "Details": [
-                            {
-                                "Profit": Box(385),
-                                "TaxRate": Box(390),
-                                "Tax": Box(395)
-                            }
-                        ]
+                        "Details": {
+                            "Profit": Box(385),
+                            "TaxRate": Box(390),
+                            "Tax": Box(395)
+                        }
                     },
                 },
                 "CorporationTax": {
@@ -651,15 +653,17 @@ class CorptaxReturn:
             for key, value in tree.items():
 
                 if type(value) == dict:
-                    if key not in obj:
-                        obj[key] = {}
-                    addit(obj[key], value)
 
-                if isinstance(value, Box):
+                    obj2 = {}
+                    addit(obj2, value)
+                    if len(obj2.keys()) > 0:
+                        obj[key] = obj2
+
+                elif isinstance(value, Box):
                     if value.present(self):
                         obj[key] = value.get(self)
 
-                if type(value) == list:
+                elif type(value) == list:
                     obj[key] = []
 
                     for elt in value:
@@ -667,6 +671,7 @@ class CorptaxReturn:
                         if isinstance(elt, Box):
                             obj[key].append(elt.get(self))
                         else:
+
                             obj2 = {}
                             addit(obj2, elt)
                             obj[key].append(obj2)
