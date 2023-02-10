@@ -4,6 +4,7 @@ from gnucash_uk_corptax.govtalk import *
 from gnucash_uk_corptax.corptax import *
 
 import xml.etree.ElementTree as ET
+import lxml.etree
 import asyncio
 import aiohttp
 import time
@@ -42,12 +43,76 @@ parser.add_argument('--output-form-values',
 parser.add_argument('--submit',
                     action="store_true", default=False,
                     help='Submit the CT message')
+parser.add_argument('--data-request',
+                    action="store_true", default=False,
+                    help='Perform a data request for outstanding items')
 
 # Parse arguments
 args = parser.parse_args(sys.argv[1:])
 
 # Load config
 params = json.loads(open(args.config).read())
+
+async def call(req, ep):
+
+    async with aiohttp.ClientSession() as session:
+
+        data = req.toxml()
+
+        async with session.post(ep, data=data) as resp:
+            if resp.status != 200:
+                print(await resp.text())
+                raise RuntimeError(
+                    "Transaction failed: status=%d" % resp.status
+                )
+            data = await resp.text()
+
+            msg = GovTalkMessage.decode(data)
+
+            if isinstance(msg, GovTalkSubmissionError):
+                print(data)
+                raise RuntimeError(msg.get("error-text"))
+
+            return msg
+
+if args.data_request:
+
+    async def doit():
+        req_params = {
+            "username": params["username"],
+            "password": params["password"],
+            "class": "HMRC-CT-CT600",
+            "gateway-test": params["gateway-test"],
+            "vendor-id": params["vendor-id"],
+            "software": params["software"],
+            "software-version": params["software-version"],
+            "ir-envelope": lxml.etree.Element("asd")
+        }
+
+        if "class" in params:
+            req_params["class"] = params["class"]
+
+        if "timestamp" in params:
+            req_params["timestamp"] = datetime.datetime.fromisoformat(
+                params["timestamp"]
+            )
+
+        req = GovTalkSubmissionRequest(req_params)
+        req.params["function"] = "list"
+        req.params["qualifier"] = "request"
+
+        print(req.toxml())
+        resp = await call(req, params["url"])
+        print(resp)
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(doit())
+
+    sys.exit(0)
+
+if args.accounts == None or args.computations == None:
+    sys.stderr.write("Need to specify --accounts and --computations\n")
+    sys.exit(1)
 
 try:
     accts = open(args.accounts, "rb").read()
@@ -230,27 +295,6 @@ if not args.submit:
     sys.exit(0)
 
 print("IRmark is", req.get_irmark())
-
-async def call(req, ep):
-
-    async with aiohttp.ClientSession() as session:
-
-        data = req.toxml()
-
-        async with session.post(ep, data=data) as resp:
-            if resp.status != 200:
-                raise RuntimeError(
-                    "Transaction failed: status=%d" % resp.status
-                )
-            data = await resp.text()
-
-            msg = GovTalkMessage.decode(data)
-
-            if isinstance(msg, GovTalkSubmissionError):
-                print(data)
-                raise RuntimeError(msg.get("error-text"))
-
-            return msg
 
 async def submit(req):
 
