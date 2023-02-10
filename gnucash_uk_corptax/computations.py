@@ -351,7 +351,7 @@ class Computations:
         return self.value(val)
 
     def type_of_company(self):
-        return "0"
+        return 6
 
     def repayment(self):
         return False
@@ -365,21 +365,7 @@ class Computations:
     def estimated_figures(self):
         return False
 
-    def OLDvalues(self):
-
-        return {
-            "1": self.company_name(),
-            "2": self.company_number(),
-            "3": self.tax_reference(),
-            "4": self.type_of_company(),
-            "30": self.start(),
-            "35": self.end(),
-            "40": self.repayment(),            
-            "50": self.making_more_than_one_return(),
-            "55": self.estimated_figures(),
-        }
-
-    def values(self):
+    def to_values(self):
         return [
             Computation(1, "Company name").set(self.company_name()),
             Computation(2, "Company registration number").set(
