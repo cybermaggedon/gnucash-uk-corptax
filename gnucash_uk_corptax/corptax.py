@@ -99,6 +99,9 @@ class InputBundle:
                 if self.kind == "money":
                     return "%.2f" % value
 
+                if self.kind == "pounds":
+                    return "%.2f" % int(value)
+
                 if self.kind == "yes":
                     return "yes" if value else "FIXME"
 
@@ -188,9 +191,9 @@ class InputBundle:
                         "Profits": Box(155, kind="money"),
                         "LossesBroughtForward": Box(160, kind="money"),
                         "NetProfits": Box(165, kind="money"),
-                        "NonTradingLoanProfitsAndGains": Box(170, kind="money"),
-                        "IncomeStatedNet": Box(172, kind="yesno"),
                     },
+                    "NonTradingLoanProfitsAndGains": Box(170, kind="money"),
+                    "IncomeStatedNet": Box(172, kind="yesno"),
                     "NonLoanAnnuitiesAnnualPaymentsDiscounts": Box(175, kind="money"),
                     "NonUKdividends": Box(180, kind="money"),
                     "DeductedIncome": Box(185, kind="money"),
@@ -256,9 +259,9 @@ class InputBundle:
                     "DoubleTaxation": {
                         "DoubleTaxationRelief": Box(450, kind="money"),
                         "UnderlyingRate": Box(455, kind="yesno"),
-                        "AmountCarriedBack": Box(460, kind="money"),
-                        "AdvancedCorporationTax": Box(465, kind="money"),
+                        "AmountCarriedBack": Box(460, kind="yes"),
                     },
+                    "AdvancedCorporationTax": Box(465, kind="money"),
                     "TotalReliefsAndDeductions": Box(470, kind="money"),
                 },
                 "CJRS": {
@@ -311,7 +314,7 @@ class InputBundle:
                 "RandDExpenditureCreditsSurrendered": Box(615, kind="money"),
             },
             "IndicatorsAndInformation": {
-                "FrankedInvestmentIncome": Box(620, kind="money"),
+                "FrankedInvestmentIncome": Box(620, kind="pounds"),
                 "NumberOf51groupCompanies": Box(625),
                 "InstalmentPayments": Box(630, kind="yes"),
                 "VeryLargeQIPs": Box(631, kind="yes"),
@@ -328,8 +331,8 @@ class InputBundle:
                 "RandDAndCreativeEnhancedExpenditure": Box(670, kind="money"),
                 "SMEclaimAsLargeCompany": Box(675, kind="money"),
                 "VaccineResearch": Box(680, kind="money"),
-                "LandRemediationEnhancedExpenditure": Box(685, kind="money"),
             },
+            "LandRemediationEnhancedExpenditure": Box(685, kind="money"),
             "AllowancesAndCharges": {
                 "AIACapitalAllowancesInc": Box(690, kind="money"),
                 "MachineryAndPlantSpecialRatePool": {
@@ -373,7 +376,7 @@ class InputBundle:
                     "BalancingCharges": Box(737, kind="money"),
                     "CapitalAllowances": Box(738, kind="money"),
                 },
-                "BusinessPremisesRenovationIncluded": {
+                "BusinessPremisesRenovationNotIncluded": {
                     "BalancingCharges": Box(740, kind="money"),
                     "CapitalAllowances": Box(745, kind="money"),
                 },
@@ -448,14 +451,14 @@ class InputBundle:
                     "CreativeCredit": Box(885, kind="money"),
                     "LandRemediationCredit": Box(890, kind="money"),
                     "PayableCapitalAllowancesFirstYearCredit": Box(895, kind="money"),
-                    "Surrender": {
-                        "Amount": Box(900, kind="money"),
-                        "JointNotice": {
-                            "Attached": Box(905, kind="yes"),
-                            "WillFollow": Box(910, kind="yes"),
-                        },
-                        "StopUntilNotice": Box(915, kind="money"),
-                    }
+                },
+                "Surrender": {
+                    "Amount": Box(900, kind="money"),
+                    "JointNotice": {
+                        "Attached": Box(905, kind="yes"),
+                        "WillFollow": Box(910, kind="yes"),
+                    },
+                    "StopUntilNotice": Box(915, kind="money"),
                 },
                 "BankAccountDetails": {
                     "BankName": Box(920),
@@ -471,6 +474,7 @@ class InputBundle:
 
                         # FIXME
                         "Line": Box(960),
+                        "Line": "FIXME",
 
                         # FIXME: AdditionalLine
                         # FIXME: PostCode

@@ -51,10 +51,10 @@ ct600:
   80: true
 
   # Attached accounts and computations for a different period
-  85: true
+  85: 
 
   # Reason for not attaching accounts
-  90: Company in liquidation
+  90: 
 
   # CT600A - Loans and arrangements
   95: true
@@ -99,7 +99,7 @@ ct600:
   145: 11218.0
 
   # Banks and other financial concerns
-  150: true
+  150: 
 
   # Trading profits
   155: 748.0
@@ -723,7 +723,7 @@ ct600:
   905: true
 
   # Joint notice will follow
-  910: true
+  910: 
 
   # Please stop repayment of the following amount until we send you the Notice
   915: 91231244.12
@@ -750,13 +750,13 @@ ct600:
   950: Clumbayah
 
   # enter the name of the nominated person
-  955: Stephen Sprinky
+  955: 
 
   # enter the address of the nominated person
-  960: 34, The Larks, Minchinhampton, France
+  960: 
 
   # enter your reference for the nominated person
-  965: 12414/a//a
+  965: 
 
   # enter your name
   970: Bunches of The Same
