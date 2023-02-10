@@ -507,7 +507,9 @@ class Computations:
             ),
             Computation(515, "Income Tax deducted from gross income included in profits"),
             Computation(520, "Income Tax repayable to the company"),
-            Computation(525, "Self-assessment of tax payable before restitution tax and coronavirus support scheme overpayments"),
+            Computation(525, "Self-assessment of tax payable before restitution tax and coronavirus support scheme overpayments").set(
+                self.tax_payable()
+            ),
             Computation(526, "Coronavirus support schemes overpayment now due"),
             Computation(527, "Restitution tax"),
             Computation(528, "Self-assessment of tax payable").set(

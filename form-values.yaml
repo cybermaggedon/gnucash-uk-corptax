@@ -19,7 +19,7 @@ ct600:
   35: 2020-12-31
 
   # Repayments this period
-  40: False
+  40: true
 
   # Making more than one return now
   50: 
@@ -40,7 +40,7 @@ ct600:
   75: 
 
   # Attached accounts and computations for this period
-  80: True
+  80: true
 
   # Attached accounts and computations for a different period
   85: 
@@ -347,7 +347,7 @@ ct600:
 
   # Self-assessment of tax payable before restitution tax and coronavirus
   # support scheme overpayments
-  525: 
+  525: 1241.4
 
   # Coronavirus support schemes overpayment now due
   526: 
@@ -749,11 +749,11 @@ ct600:
   970: 
 
   # Name
-  975: 
+  975: Sarah McAcre
 
   # Date
-  980: 
+  980: 2022-02-10
 
   # Status
-  985: 
+  985: Director
 
