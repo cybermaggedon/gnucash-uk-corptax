@@ -158,7 +158,36 @@ if args.output_form_values:
 
     sys.exit(0)
 
-if args.output_ct:
+def request_params(params, utr, doc):
+
+    req_params = {
+        "username": params["username"],
+        "password": params["password"],
+        "class": "HMRC-CT-CT600",
+        "gateway-test": params["gateway-test"],
+        "tax-reference": utr,
+        "vendor-id": params["vendor-id"],
+        "software": params["software"],
+        "software-version": params["software-version"],
+        "ir-envelope": doc
+    }
+
+    if "class" in params:
+        req_params["class"] = params["class"]
+
+    if "timestamp" in params:
+        req_params["timestamp"] = datetime.datetime.fromisoformat(
+            params["timestamp"]
+        )
+
+    return req_params
+
+def get_govtalk_message(params, utr, doc):
+
+    req_params = request_params(params, utr, rtn.getroot())
+    return GovTalkSubmissionRequest(req_params)
+
+def get_bundle(args):
 
     if args.config is None:
         raise RuntimeError("Must specify a config")
@@ -196,34 +225,18 @@ if args.output_ct:
     else:
         atts = {}
 
-    cret = CorptaxReturn(corptax, accts, form_values, params, atts)
-    rtn = cret.get_return()
+    return InputBundle(corptax, accts, form_values, params, atts)
 
-    utr = str(form_values["ct600"][3])
+if args.output_ct:
 
-    req_params = {
-        "username": params["username"],
-        "password": params["password"],
-        "class": "HMRC-CT-CT600",
-        "gateway-test": params["gateway-test"],
-        "tax-reference": utr,
-        "vendor-id": params["vendor-id"],
-        "software": params["software"],
-        "software-version": params["software-version"],
-        "ir-envelope": rtn.getroot()
-    }
+    bundle = get_bundle(args)
 
-    if "class" in params:
-        req_params["class"] = params["class"]
+    rtn = bundle.get_return()
+    utr = str(bundle.form_values["ct600"][3])
 
-    if "timestamp" in params:
-        req_params["timestamp"] = datetime.datetime.fromisoformat(
-            params["timestamp"]
-        )
+    gtm = get_govtalk_message(bundle.params, utr, rtn)
 
-    req = GovTalkSubmissionRequest(req_params)
-
-    print(req.toprettyxml())
+    print(gtm.toprettyxml())
 
     sys.exit(0)
 
