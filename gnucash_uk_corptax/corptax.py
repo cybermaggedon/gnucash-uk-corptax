@@ -222,117 +222,330 @@ class CorptaxReturn:
 
         obj = {}
 
-        handling = {
-            "4": lambda x: "%02d" % x,
-            "5": lambda x: "Yes" if x else "No",
-            "6": lambda x: "Yes" if x else "No",
-            "7": lambda x: "Yes" if x else "No",
-            "8": lambda x: "Yes" if x else "No",
-            "30": lambda x: str(x),
-            "35": lambda x: str(x),
-            "40": lambda x: "Yes" if x else "No",
-            "45": lambda x: "Yes" if x else "No",
-            "50": lambda x: "Yes" if x else "No",
-            "55": lambda x: "Yes" if x else "No",
-            "60": lambda x: "Yes" if x else "No",
-            "65": lambda x: "Yes" if x else "No",
-            "70": lambda x: "Yes" if x else "No",
-            "75": lambda x: "Yes" if x else "No",
-            "80": lambda x: "Yes" if x else "No",
-            "85": lambda x: "Yes" if x else "No",
-            "95": lambda x: "Yes" if x else "No",
-            "100": lambda x: "Yes" if x else "No",
-            "105": lambda x: "Yes" if x else "No",
-            "110": lambda x: "Yes" if x else "No",
-            "115": lambda x: "Yes" if x else "No",
-            "120": lambda x: "Yes" if x else "No",
-            "125": lambda x: "Yes" if x else "No",
-            "130": lambda x: "Yes" if x else "No",
-            "135": lambda x: "Yes" if x else "No",
-            "140": lambda x: "Yes" if x else "No",
-            "141": lambda x: "Yes" if x else "No",
-            "142": lambda x: "Yes" if x else "No",
-            "150": lambda x: "Yes" if x else "No",
-        }
+        class Box:
+            def __init__(self, id, kind=None):
+                self.kind = kind
+                self.id = id
+            def present(self, obj):
+                if self.id in obj.form_values["ct600"]:
+                    return True
+                return False
+            def get(self, obj):
+                value = obj.form_values["ct600"][self.id]
 
-        ci = ["CompanyInformation"]
-        cini = ci + ["NorthernIreland"]
-        cipc = ci + ["PeriodCovered"]
-        ris = ["ReturnInfoSummary"]
-        ris_tp = ris + ["TransferPricing"]
-        ris_a = ris + ["Accounts"]
-        ris_c = ris + ["Computations"]
-        sp = ris + ["SupplementaryPages"]
-        tvr = ["Turnover"]
-        ctc = ["CompanyTaxCalculation"]
-        ctc_i = ctc + ["Income"]
-        ctc_i_t = ctc_i + ["Trading"]
+                if self.kind == "yesno":
+                    return "Yes" if value else "No"
+
+                if self.kind == "yes":
+                    return "Yes" if value else "FIXME"
+
+                if self.kind == "date":
+                    return str(value)
+
+                if self.kind == "year":
+                    return str(value)
+
+                if self.kind == "companytype":
+                    return "%02d" % value
+
+                return value
 
         mapping = {
-            "1": [ci + ["CompanyName"]],
-            "2": [ci + ["RegistrationNumber"]],
-            "3": [ci + ["Reference"]],
-            "4": [ci + ["CompanyType"]],
-            "5": [cini + ["NItradingActivity"]],
-            "6": [cini + ["SME"]],
-            "7": [cini + ["NIemployer"]],
-            "8": [cini + ["SpecialCircumstances"]],
-            "30": [cipc + ["From"]],
-            "35": [cipc + ["To"]],
-            "40": [ris + ["ThisPeriod"]],
-            "45": [ris + ["EarlierPeriod"]],
-            "50": [ris + ["MultipleReturns"]],
-            "55": [ris + ["ProvisionalFigures"]],
-            "60": [ris + ["PartOfNonSmallGroup"]],
-            "65": [ris + ["RegisteredAvoidanceScheme"]],
-            "70": [ris_tp + ["Adjustment"]],
-            "75": [ris_tp + ["SME"]],
-            "80": [
-                ris_a + ["ThisPeriodAccounts"],
-                ris_c + ["ThisPeriodAccounts"]
-            ],
-            "85": [
-                ris_a + ["DifferentPeriod"],
-                ris_c + ["DifferentPeriod"]
-            ],
-            "90": [
-                ris_a + ["NoAccountsReason"],
-                ris_c + ["NoComputationsReason"],
-            ],
-            "95": [sp + ["CT600A"]],
-            "100": [sp + ["CT600B"]],
-            "105": [sp + ["CT600C"]],
-            "110": [sp + ["CT600D"]],
-            "115": [sp + ["CT600E"]],
-            "120": [sp + ["CT600F"]],
-            "125": [sp + ["CT600G"]],
-            "130": [sp + ["CT600H"]],
-            "135": [sp + ["CT600I"]],
-            "140": [sp + ["CT600J"]],
-            "141": [sp + ["CT600K"]],
-            "142": [sp + ["CT600L"]],
-            "145": [tvr + ["Total"]],
-            "150": [tvr + ["OtherFinancialConcerns"]],
-            "155": [ctc_i_t + ["Profits"]],
-            "160": [ctc_i_t + ["LossesBroughtForward"]],
-            "165": [ctc_i_t + ["NetProfits"]],
-            "170": [ctc_i_t + ["NonTradingLoanProfitsAndGains"]],
-            "172": [ctc_i_t + ["IncomeStatedNet"]],
-       }
+            "CompanyInformation": {
+                "CompanyName": Box(1),
+                "RegistrationNumber": Box(2),
+                "Reference": Box(3),
+                "CompanyType": Box(4, kind="companytype"),
+                "NorthernIreland": {
+                    "NItradingActivity": Box(5, kind="yesno"),
+                    "SME": Box(6, kind="yesno"),
+                    "NIemployer": Box(7, kind="yesno"),
+                    "SpecialCircumstances": Box(8, kind="yesno"),
+                },
+                "PeriodCovered": {
+                    "From": Box(30, kind="date"),
+                    "To": Box(35, kind="date"),
+                }
+            },
+            "ReturnInfoSummary": {
+                "ThisPeriod": Box(40, kind="yesno"),
+                "EarlierPeriod": Box(45, kind="yesno"),
+                "MultipleReturns": Box(50, kind="yesno"),
+                "ProvisionalFigures": Box(55, kind="yesno"),
+                "PartOfNonSmallGroup": Box(60, kind="yesno"),
+                "RegisteredAvoidanceScheme": Box(65, kind="yesno"),
+                "TransferPricing": {
+                    "Adjustment": Box(70, kind="yesno"),
+                    "SME": Box(75, kind="yesno"),
+                },
+                "Accounts": {
+                    "ThisPeriodAccounts": Box(80, kind="yesno"),
+                    "DifferentPeriod": Box(85, kind="yesno"),
+                    "NoAccountsReason": Box(90),
+                },
+                "Computations": {
+                    "ThisPeriodAccounts": Box(80, kind="yesno"),
+                    "DifferentPeriod": Box(85, kind="yesno"),
+                    "NoComputationsReason": Box(90),
+                },
+                "SupplementaryPages": {
+                    "CT600A": Box(95, kind="yesno"),
+                    "CT600B": Box(100, kind="yesno"),
+                    "CT600C": Box(105, kind="yesno"),
+                    "CT600D": Box(110, kind="yesno"),
+                    "CT600E": Box(115, kind="yesno"),
+                    "CT600F": Box(120, kind="yesno"),
+                    "CT600G": Box(125, kind="yesno"),
+                    "CT600H": Box(130, kind="yesno"),
+                    "CT600I": Box(135, kind="yesno"),
+                    "CT600J": Box(140, kind="yesno"),
+                    "CT600K": Box(141, kind="yesno"),
+                    "CT600L": Box(142, kind="yesno"),
+                }
+            },
+            "Turnover": {
+                "Total": Box(145),
+                "OtherFinancialConcerns": Box(150),
+            },
+            "CompanyTaxCalculation": {
+                "Income": {
+                    "Trading": {
+                        "Profits": Box(155),
+                        "LossesBroughtForward": Box(160),
+                        "NetProfits": Box(165),
+                        "NonTradingLoanProfitsAndGains": Box(170),
+                        "IncomeStatedNet": Box(172, kind="yesno"),
+                    },
+                    "NonLoanAnnuitiesAnnualPaymentsDiscounts": Box(175),
+                    "NonUKdividends": Box(180),
+                    "DeductedIncome": Box(185),
+                    "PropertyBusinessIncome": Box(190),
+                    "NonTradingGainsIntangibles": Box(195),
+                    "TonnageTaxProfits": Box(200),
+                    "OtherIncome": Box(205),
+                },
+                "ChargeableGains": {
+                    "GrossGains": Box(210),
+                    "AllowableLosses": Box(215),
+                    "NetChargeableGains": Box(220),
+                },
+                "LossesBroughtForward": Box(225),
+                "NonTradeDeficitsOnLoans": Box(230),
+                "ProfitsBeforeOtherDeductions": Box(235),
+                "DeductionsAndReliefs": {
+                    "UnquotedShares": Box(240),
+                    "ManagementExpenses": Box(245),
+                    "UKpropertyBusinessLosses": Box(250),
+                    "CapitalAllowances": Box(255),
+                    "NonTradeDeficits": Box(260),
+                    "CarriedForwardNonTradeDeficits": Box(263),
+                    "NonTradingLossIntangibles": Box(265),
+                    "TradingLosses": Box(275),
+                    "TradingLossesCarriedBack": Box(280, kind="yesno"),
+                    "TradingLossesCarriedForward": Box(285),
+                    "NonTradeCapitalAllowances": Box(290),
+                    "Total": Box(295),
+                },
+                "ChargesAndReliefs": {
+                    "ProfitsBeforeDonationsAndGroupRelief": Box(300),
+                    "QualifyingDonations": Box(305),
+                    "GroupRelief": Box(310),
+                    "GroupReliefForCarriedForwardLosses": Box(312),
+                },
+                "ChargeableProfits": Box(315),
+                "RingFenceProfitsIncluded": Box(320),
+                "NorthernIrelandProfitsIncluded": Box(325),
+                "CorporationTaxChargeable": {
+                    "FinancialYearOne": {
+                        "Year": Box(330, kind="year"),
+                        "Details": [
+                            {
+                                "Profit": Box(335),
+                                "TaxRate": Box(340),
+                                "Tax": Box(345)
+                            }
+                        ]
+                    },
+                    "FinancialYearTwo": {
+                        "Year": Box(380, kind="year"),
+                        "Details": [
+                            {
+                                "Profit": Box(385),
+                                "TaxRate": Box(390),
+                                "Tax": Box(395)
+                            }
+                        ]
+                    },
+                },
+                "CorporationTax": {
+                    "MarginalReliefForRingFenceTrades": Box(435),
+                    "NetCorporationTaxChargeable": Box(440),
+                    "TaxReliefsAndDeductions": {
+                        "CommunityInvestmentRelief": Box(445),
+                        "DoubleTaxation": {
+                            "DoubleTaxationRelief": Box(450),
+                            "UnderlyingRate": Box(455, kind="yesno"),
+                            "AmountCarriedBack": Box(460),
+                            "AdvancedCorporationTax": Box(465),
+                        },
+                        "TotalReliefsAndDeductions": Box(470),
+                    },
+                    "CJRS": {
+                        "CJRSreceived": Box(471),
+                        "CJRSdue": Box(472),
+                        "CJRSoverpaymentAlreadyAssessed": Box(473),
+                        "JobRetentionBonusOverpayment": Box(474),
+                    },
+                },
+            },
+            "CalculationOfTaxOutstandingOrOverpaid": {
+                "NetCorporationTaxLiability": Box(475),
+                "LoansToParticipators": Box(480),
+                "CT600AreliefDue": Box(485, kind="yesno"),
+                "CFCtaxPayable": Box(490),
+                "BankLevyPayable": Box(495),
+                "BankSurchargePayable": Box(496),
+                "CFCandBankLevyTotal": Box(500),
+                "SupplementaryCharge": Box(505),
+                "TaxChargeable": Box(510),
+                "IncomeTax": {
+                    "DeductedIncomeTax": Box(515),
+                    "TaxRepayable": Box(520),
+                },
+                "TaxPayable": Box(525),
+                "CJRSoverpaymentsNowDue": Box(526),
+                "RestitutionTax": Box(527),
+                "TaxPayableIncludingRestitutionTax": Box(528),
+            },
+            "TaxReconciliation": {
+                "ResearchAndDevelopmentCredit": Box(530),
+                "VaccineCredit": Box(535),
+                "CreativeCredit": Box(540),
+                "ResearchAndDevelopmentVaccineOrCreativeTaxCredit":  Box(545),
+                "LandRemediationCredit": Box(550),
+                "LifeAssuranceCompanyCredit": Box(555),
+                "LandOrLifeCredit": Box(560),
+                "CapitalAllowancesFirstYearCredit": Box(565),
+                "SurplusResearchAndDevelopmentCreditsOrCreativeCreditPayable": Box(570),
+                "LandOrLifeCreditPayable": Box(575),
+                "CapitalAllowancesFirstYearCreditPayable": Box(580),
+                "RingFenceCorpTaxIncluded": Box(585),
+                "NIcorporationTaxIncluded": Box(586),
+                "RingFenceSupplementaryChargeIncluded": Box(590),
+                "TaxAlreadyPaid": Box(595),
+                "TaxOutstandingOrOverpaid": {
+                    "TaxOutstanding": Box(600),
+                    "TaxOverpaid": Box(605),
+                },
+                "RefundsSurrendered": Box(610),
+                "RandDExpenditureCreditsSurrendered": Box(615),
+            },
+            "IndicatorsAndInformation": {
+                "FrankedInvestmentIncome": Box(620),
+                "NumberOf51groupCompanies": Box(625),
+                "InstalmentPayments": Box(630, kind="yes"),
+                "VeryLargeQIPs": Box(631, kind="yes"),
+                "GroupPayment": Box(635, kind="yes"),
+                "IntangibleAssets": Box(640, kind="yes"),
+                "CrossBorderRoyalty": Box(645, kind="yes"),
+                "EatOutToHelpOutScheme": Box(647),
+            },
+            "EnhancedExpenditure": {
+                "SMEclaim": Box(650, kind="yes"),
+                "LargeCompanyClaim": Box(655, kind="yes"),
+                "RandDEnhancedExpenditure": Box(660),
+                "CreativeEnhancedExpenditure": Box(665),
+                "RandDAndCreativeEnhancedExpenditure": Box(670),
+                "SMEclaimAsLargeCompany": Box(675),
+                "VaccineResearch": Box(680),
+                "LandRemediationEnhancedExpenditure": Box(685),
+            },
+            "AllowancesAndCharges": {
+                "AIACapitalAllowancesInc": Box(690),
+                "MachineryAndPlantSpecialRatePool": {
+                    "BalancingCharges": Box(695),
+                    "CapitalAllowances": Box(700),
+                },
+                "MachineryAndPlantMainPool": {
+                    "BalancingCharges": Box(705),
+                    "CapitalAllowances": Box(710),
+                },
+                "StructuresAndBuildingsCapitalAllowances": Box(711),
+                "ElectricChargePoints": {
+                    "BalancingCharges": Box(713),
+                    "CapitalAllowances": Box(714),
+                },
+                "BusinessPremisesRenovationIncluded": {
+                    "BalancingCharges": Box(715),
+                    "CapitalAllowances": Box(720),
+                },
+                "EnterpriseZones": {
+                    "BalancingCharges": Box(721),
+                    "CapitalAllowances": Box(722),
+                },
+                "ZeroEmissionsGoodsVehicles": {
+                    "BalancingCharges": Box(723),
+                    "CapitalAllowances": Box(724),
+                },
+                "ZeroEmissionsCars": {
+                    "BalancingCharges": Box(726),
+                    "CapitalAllowances": Box(727),
+                },
+                "Others": {
+                    "BalancingCharges": Box(725),
+                    "CapitalAllowances": Box(730),
+                },
+            },
+            "NotIncluded": {
+                "AIACapitalAllowancesNotInc": Box(735),
+                "StructuresAndBuildingsCapitalAllowances": Box(736),
+                "ElectricChargePoints": {
+                    "BalancingCharges": Box(737),
+                    "CapitalAllowances": Box(738),
+                },
+                "BusinessPremisesRenovationIncluded": {
+                    "BalancingCharges": Box(740),
+                    "CapitalAllowances": Box(745),
+                },
+                "EnterpriseZones": {
+                    "BalancingCharges": Box(746),
+                    "CapitalAllowances": Box(747),
+                },
+                "ZeroEmissionsGoodsVehicles": {
+                    "BalancingCharges": Box(748),
+                    "CapitalAllowances": Box(749),
+                },
+                "ZeroEmissionsCars": {
+                    "BalancingCharges": Box(751),
+                    "CapitalAllowances": Box(752),
+                },
+                "OtherAllowancesAndCharges": {
+                    "BalancingCharges": Box(750),
+                    "CapitalAllowances": Box(755),
+                },
+            },
+        }
 
-        for id, value in self.form_values["ct600"].items():
-            id = str(id)
-            if id in handling:
-                value = handling[id](value)
-            if id in mapping:
-                eltslists = mapping[id]
-                for elts in eltslists:
-                    cur = obj
-                    for elt in elts[:-1]:
-                        if elt not in cur:
-                            cur[elt] = {}
-                        cur = cur[elt]
-                    cur[elts[-1]] = value
+        def addit(obj, tree):
+            for key, value in tree.items():
+
+                if type(value) == dict:
+                    if key not in obj:
+                        obj[key] = {}
+                    addit(obj[key], value)
+
+                if type(value) == Box:
+                    if value.present(self):
+                        obj[key] = value.get(self)
+
+                if type(value) == list:
+                    obj[key] = []
+                    for elt in value:
+                        obj2 = {}
+                        addit(obj2, elt)
+                        obj[key].append(obj2)
+
+        addit(obj, mapping)
 
         return obj
 
