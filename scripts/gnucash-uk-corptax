@@ -166,9 +166,6 @@ ret = CorptaxReturn(comps, accts, form_values, params, atts)
 
 rtn = ret.get_return()
 
-print(json.dumps(rtn, indent=4))
-sys.exit(0)
-
 utr = rtn.find(".//{%s}Reference" % ct_ns).text
 
 req_params = {

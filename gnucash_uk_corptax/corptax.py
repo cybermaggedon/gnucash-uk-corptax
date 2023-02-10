@@ -220,7 +220,8 @@ class CorptaxReturn:
 
     def get_return(self):
 
-        obj = {}
+        comp_ixbrl = base64.b64encode(self.comps).decode("utf-8")
+        accounts_ixbrl = base64.b64encode(self.accts).decode("utf-8")
 
         class Box:
             def __init__(self, id, kind=None):
@@ -617,9 +618,7 @@ class CorptaxReturn:
                     "Address": {
 
                         # FIXME
-                        "Line": [
-                            Box(960),
-                        ],
+                        "Line": Box(960),
 
                         # FIXME: AdditionalLine
                         # FIXME: PostCode
@@ -633,6 +632,18 @@ class CorptaxReturn:
                 "Name": Box(975),
                 "Status": Box(985),
             },
+            "XBRLsubmission": {
+                "Computation": {
+                    "Instance": {
+                        "EncodedInlineXBRLDocument": Fixed(comp_ixbrl),
+                    }
+                },
+                "Accounts": {
+                    "Instance": {
+                        "EncodedInlineXBRLDocument": Fixed(accounts_ixbrl),
+                    }
+                }
+            }
         }
 
         def addit(obj, tree):
@@ -660,23 +671,8 @@ class CorptaxReturn:
                             addit(obj2, elt)
                             obj[key].append(obj2)
 
-        addit(obj, mapping)
-
-        return obj
-
-        ctr = {
-            "CompanyInformation": self.company_info(),
-            "ReturnInfoSummary": self.return_info(),
-            "Turnover": self.turnover(),
-            "CompanyTaxCalculation": self.company_tax_calculation(),
-            "CalculationOfTaxOutstandingOrOverpaid": self.tax_outstanding(),
-            "EnhancedExpenditure": self.enhanced_expenditure(),
-            "AllowancesAndCharges": self.allowances_and_charges(),
-            "Declaration": self.declaration(),
-            "AttachedFiles": self.attached_files()
-        }
-
-        return ctr
+        ctr = {}
+        addit(ctr, mapping)
 
         ret = {
             "IRenvelope": {
