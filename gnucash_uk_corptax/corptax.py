@@ -12,28 +12,6 @@ nsmap = {
 
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 
-# Presents a date in the appropriate format for CT XML
-def to_date(d):
-    return str(d)
-
-# Presents cash in the appropriate format for CT XML
-def to_money(v):
-    return "%.2f" % float(v)
-
-# Iterates over a context and all child, extracting values as k,v pairs.
-def get_all_context_values(ctxt):
-
-    for name, value in ctxt.values.items():
-        if name.namespace in nsmap:
-            n = nsmap[name.namespace] + ":" + name.localname
-            yield n, value.to_value().get_value()
-        else:
-            raise RuntimeError("Namespace %s not known" % name.namespace)
-
-    for rel, sctxt in ctxt.children.items():
-        for k, v in get_all_context_values(sctxt):
-            yield k, v
-
 # Gets a set of values dict from an iXBRL document.
 def get_comps(comps):
     c = Computations(comps)
@@ -74,222 +52,227 @@ def to_values(comps):
         "sme_rnd_expenditure_deduction": c.sme_rnd_expenditure_deduction(),
         "investment_allowance": c.investment_allowance(),
     }
-    
-def company_info(params, x):
-    return {
-        "CompanyName": x.company_name(),
-        "RegistrationNumber": x.company_number(),
-        "Reference": x.tax_reference(),
-        "CompanyType": params.get("company-type"),
-        "PeriodCovered": {
-            "From": to_date(x.start()),
-            "To": to_date(x.end()),
-        }
-    }
 
-def return_info(x):
-    return {
-        "ThisPeriod": "yes",
-        "Accounts": {
-            "ThisPeriodAccounts": "yes"
-        },
-        "Computations": {
-            "ThisPeriodComputations": "yes"
-        },
-        "SupplementaryPages": {
-        }
-    }
+class CorptaxReturn:
+    def __init__(self, comps, accts, form_values, params, atts):
+        self.comps = comps
+        self.accts = accts
+        self.form_values = form_values
+        self.params = params
+        self.atts = atts
 
-def company_tax_calculation(x):
-    return {
-        "Income": {
-            "Trading": {
-                "Profits": to_money(x.adjusted_trading_profit()),
-                "NetProfits": to_money(x.net_trading_profits()),
-            },
-        },
-        "ChargeableGains": {
-            "NetChargeableGains": to_money(x.net_chargeable_gains()),
-        },
-        "ProfitsBeforeOtherDeductions": to_money(x.profits_before_other_deductions_and_reliefs()),
-        "ChargesAndReliefs": {
-            "ProfitsBeforeDonationsAndGroupRelief": to_money(x.profits_before_charges_and_group_relief()),
-        },
-        "ChargeableProfits": to_money(x.total_profits_chargeable_to_corporation_tax()),
-        "CorporationTaxChargeable": {
-            "FinancialYearOne": {
-                "Year": x.fy1(),
-                "Details": {
-                    "Profit": to_money(x.fy1_profit()),
-                    "TaxRate": to_money(x.fy1_tax_rate()),
-                    "Tax": to_money(x.fy1_tax()),
-                }
-            },
-            "FinancialYearTwo": {
-                "Year": x.fy2(),
-                "Details": {
-                    "Profit": to_money(x.fy2_profit()),
-                    "TaxRate": to_money(x.fy2_tax_rate()),
-                    "Tax": to_money(x.fy2_tax()),
-                }
-            }
-        },
-        "CorporationTax": to_money(x.corporation_tax_chargeable()),
-        "NetCorporationTaxChargeable": to_money(x.corporation_tax_chargeable()),
-    }
+    def box(self, num):
+        val = self.form_values["ct600"][num]
+        if val is None: return ""
+        return val
 
-def tax_outstanding(x):
-    return {
-        "NetCorporationTaxLiability": to_money(x.corporation_tax_chargeable()),
-        "TaxChargeable": to_money(x.tax_chargeable()),
-        "TaxPayable": to_money(x.tax_payable()),
-    }
+    def money(self, num):
+        val = self.form_values["ct600"][num]
+        if val is None: return 0
+        return "%.2f" % float(val)
 
-def attached_files(comps, accts):
+    def date(self, num):
+        val = self.form_values["ct600"][num]
+        if val is None: return ""
+        return str(val)
 
-    comp_ixbrl = base64.b64encode(comps).decode("utf-8")
-    accounts_ixbrl = base64.b64encode(accts).decode("utf-8")
-
-    return {
-        "XBRLsubmission": {
-            "Computation": {
-                "Instance": {
-                    "EncodedInlineXBRLDocument": comp_ixbrl
-                }
-            },
-            "Accounts": {
-                "Instance": {
-                    "EncodedInlineXBRLDocument": accounts_ixbrl
-                }
+    def company_info(self):
+        return {
+            "CompanyName": self.box(1),
+            "RegistrationNumber": self.box(2),
+            "Reference": self.box(3),
+            "CompanyType": self.box(4),
+            "PeriodCovered": {
+                "From": self.date(30),
+                "To": self.date(35),
             }
         }
-    }
 
-def turnover(x):
-    return {
-        "Total": to_money(x.turnover_revenue()),
-    }
+    def turnover(self):
+        return {
+            "Total": self.money(145),
+        }
 
-def allowances_and_charges(x):
-    return {
-        "AIACapitalAllowancesInc": to_money(x.investment_allowance()),
-    }
-
-def declaration(params):
-    return {
-        "AcceptDeclaration": "yes",
-        "Name": params.get("declaration-name"),
-        "Status": params.get("declaration-status")
-    }
-
-def company_tax_return(params, x, comps, accts):
-    return {
-        "CompanyInformation": company_info(params, x),
-        "ReturnInfoSummary": return_info(x),
-        "Turnover": turnover(x),
-        "CompanyTaxCalculation": company_tax_calculation(x),
-        "CalculationOfTaxOutstandingOrOverpaid": tax_outstanding(x),    
-        "EnhancedExpenditure": {},
-        "AllowancesAndCharges": allowances_and_charges(x),
-        "Declaration": declaration(params),
-        "AttachedFiles": attached_files(comps, accts)
-    }
-
-def irheader(params, x):
-    return {
-        "Keys": {
-            "Key": x.tax_reference(),
-        },
-        "PeriodEnd": to_date(x.end()),
-        "Principal": {
-            "Contact": {
-                "Name": {
-                    "Ttl": params.get("title"),
-                    "Fore": params.get("first-name"),
-                    "Sur": params.get("second-name")
+    def company_tax_calculation(self):
+        return {
+            "Income": {
+                "Trading": {
+                    "Profits": self.money(155),
+                    "NetProfits": self.money(165),
                 },
-                "Email": params.get("email"),
-                "Telephone": {
-                    "Number": params.get("phone")
+            },
+            "ChargeableGains": {
+                "NetChargeableGains": self.money(220),
+            },
+            "ProfitsBeforeOtherDeductions": self.money(235),
+            "ChargesAndReliefs": {
+                "ProfitsBeforeDonationsAndGroupRelief": self.money(300),
+            },
+            "ChargeableProfits": self.money(315),
+            "CorporationTaxChargeable": {
+                "FinancialYearOne": {
+                    "Year": self.box(330),
+                    "Details": {
+                        "Profit": self.money(335),
+                        "TaxRate": self.money(340),
+                        "Tax": self.money(345),
+                    }
+                },
+                "FinancialYearTwo": {
+                    "Year": self.box(380),
+                    "Details": {
+                        "Profit": self.money(385),
+                        "TaxRate": self.money(390),
+                        "Tax": self.money(395),
+                    }
+                }
+            },
+            "CorporationTax": self.money(430),
+            "NetCorporationTaxChargeable": self.money(440),
+        }
+
+    def return_info(self):
+        return {
+            "ThisPeriod": "yes",
+            "Accounts": {
+                "ThisPeriodAccounts": "yes"
+            },
+            "Computations": {
+                "ThisPeriodComputations": "yes"
+            },
+            "SupplementaryPages": {
+            }
+        }
+
+    def irheader(self):
+        return {
+            "Keys": {
+                "Key": self.box(3),
+            },
+            "PeriodEnd": self.date(35),
+            "Principal": {
+                "Contact": {
+                    "Name": {
+                        "Ttl": self.params.get("title"),
+                        "Fore": self.params.get("first-name"),
+                        "Sur": self.params.get("second-name")
+                    },
+                    "Email": self.params.get("email"),
+                    "Telephone": {
+                        "Number": self.params.get("phone")
+                    }
+                }
+            },
+            "IRmark": "",
+            "Sender": "Company"
+        }
+
+    def tax_outstanding(self):
+        return {
+            "NetCorporationTaxLiability": self.money(440),
+            "TaxChargeable": self.money(510),
+            "TaxPayable": self.money(528),
+        }
+
+    def allowances_and_charges(self):
+        return {
+            "AIACapitalAllowancesInc": self.money(690),
+        }
+
+    def declaration(self):
+        return {
+            "AcceptDeclaration": "yes",
+            "Name": self.params.get("declaration-name"),
+            "Status": self.params.get("declaration-status")
+        }
+
+    def attached_files(self):
+
+        comp_ixbrl = base64.b64encode(self.comps).decode("utf-8")
+        accounts_ixbrl = base64.b64encode(self.accts).decode("utf-8")
+
+        return {
+            "XBRLsubmission": {
+                "Computation": {
+                    "Instance": {
+                        "EncodedInlineXBRLDocument": comp_ixbrl
+                    }
+                },
+                "Accounts": {
+                    "Instance": {
+                        "EncodedInlineXBRLDocument": accounts_ixbrl
+                    }
                 }
             }
-        },
-        "IRmark": "",
-        "Sender": "Company"
-    }
-
-def enhanced_expenditure(x):
-    rnd = x.sme_rnd_expenditure_deduction()
-    return {
-        "SMEclaim": "yes",
-        "RandDEnhancedExpenditure": to_money(rnd),
-        "RandDAndCreativeEnhancedExpenditure": to_money(rnd),
-    }        
-
-def to_return(comps, accts, params, atts):
-
-    x = get_comps(comps)
-
-    cret = company_tax_return(params, x, comps, accts)
-
-    rnd = x.sme_rnd_expenditure_deduction()
-    if rnd > 0:
-        cret["EnhancedExpenditure"] = enhanced_expenditure(x)
-
-    ret = {
-        "IRenvelope": {
-            "IRheader": irheader(params, x),
-            "CompanyTaxReturn": cret
         }
-    }
+    
+    def enhanced_expenditure(self):
 
-    if len(ret.keys()) != 1:
-        raise RuntimeError("Oops")
+        if self.box(670) > 0:
+            return {
+                "SMEclaim": "yes",
+                "RandDEnhancedExpenditure": self.money(660),
+                "RandDAndCreativeEnhancedExpenditure": self.money(670),
+            }
+        else:
+            return {}
 
-    relt_name = list(ret.keys())[0]
-    root = ET.Element(
-        "{%s}%s" % (ct_ns, relt_name),
-        nsmap={"ct": ct_ns}
-    )
+    def get_return(self):
 
-    relt = ret[relt_name]
+        ctr = {
+            "CompanyInformation": self.company_info(),
+            "ReturnInfoSummary": self.return_info(),
+            "Turnover": self.turnover(),
+            "CompanyTaxCalculation": self.company_tax_calculation(),
+            "CalculationOfTaxOutstandingOrOverpaid": self.tax_outstanding(),
+            "EnhancedExpenditure": self.enhanced_expenditure(),
+            "AllowancesAndCharges": self.allowances_and_charges(),
+            "Declaration": self.declaration(),
+            "AttachedFiles": self.attached_files()
+        }
 
-    def add(root, relt):
+        ret = {
+            "IRenvelope": {
+                "IRheader": self.irheader(),
+                "CompanyTaxReturn": ctr
+            }
+        }
 
-        for name in relt:
 
-            tag = "{%s}%s" % (ct_ns, name)
-            value = relt[name]
+        relt_name = list(ret.keys())[0]
+        root = ET.Element(
+            "{%s}%s" % (ct_ns, relt_name),
+            nsmap={"ct": ct_ns}
+        )
 
-            if isinstance(relt[name], dict):
-                sub = ET.SubElement(root, tag)
-                add(sub, value)
-            else:
-                ET.SubElement(root, tag).text = str(value)
+        relt = ret[relt_name]
 
-    add(root, relt)
+        def add(root, relt):
+            
+            for name in relt:
 
-    # This is all very hacky
+                tag = "{%s}%s" % (ct_ns, name)
+                value = relt[name]
 
-    # CompanyTaxReturn needs an attribute
-    root.find(".//{%s}CompanyTaxReturn[1]" % ct_ns).set(
-        "ReturnType", "new"
-    )
+                if isinstance(relt[name], dict):
+                    sub = ET.SubElement(root, tag)
+                    add(sub, value)
+                else:
+                    ET.SubElement(root, tag).text = str(value)
 
-    # Key needs a UTR type attribute
-    root.find(".//{%s}Key[1]" % ct_ns).set(
-        "Type", "UTR"
-    )
+        add(root, relt)
 
-    attf_elt = root.find(".//{%s}AttachedFiles" % ct_ns)
+        # CompanyTaxReturn needs an attribute
+        root.find(".//{%s}CompanyTaxReturn[1]" % ct_ns).set(
+            "ReturnType", "new"
+        )
 
-    for k, v in atts.items():
-        att_text = base64.b64encode(v).decode("utf-8")
-        att_elt = ET.SubElement(attf_elt, "{%s}Attachment" % ct_ns)
-        att_elt.set("Type", "other")
-        att_elt.set("Format", "pdf")
-        att_elt.set("Filename", k)
-        att_elt.text = att_text
+        # Key needs a UTR type attribute
+        root.find(".//{%s}Key[1]" % ct_ns).set(
+            "Type", "UTR"
+        )
 
-    return ET.ElementTree(root)
+        attf_elt = root.find(".//{%s}AttachedFiles" % ct_ns)
+
+        return ET.ElementTree(root)
 

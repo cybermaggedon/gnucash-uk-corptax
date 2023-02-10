@@ -12,6 +12,8 @@ import sys
 import argparse
 import json
 import datetime
+import textwrap
+import yaml
 
 # Command-line argument parser
 parser = argparse.ArgumentParser(
@@ -20,10 +22,12 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--config', '-c',
 		    default='config.json',
                     help='Configuration file (default: config.json)')
-parser.add_argument('--accounts', '-a', required=True,
+parser.add_argument('--accounts', '-a', required=False,
                     help='Company accounts iXBRL file')
-parser.add_argument('--computations', '--ct600', '-t', required=True,
+parser.add_argument('--computations', '--comps', '-t', required=True,
                     help='Corporation tax computations iXBRL file')
+parser.add_argument('--form-values', '--ct600', '-f', required=False,
+                    help='CT600 form values YAML file')
 parser.add_argument('--attachment', '-m', required=False, action='append',
                     help='Corporation tax computations iXBRL file')
 parser.add_argument('--output-ct', '-p',
@@ -32,6 +36,9 @@ parser.add_argument('--output-ct', '-p',
 parser.add_argument('--output-values',
                     action="store_true", default=False,
                     help='Just output some data values (debug)')
+parser.add_argument('--output-form-values',
+                    action="store_true", default=False,
+                    help='Output CT600 form values from corptax')
 parser.add_argument('--submit',
                     action="store_true", default=False,
                     help='Submit the CT message')
@@ -113,14 +120,8 @@ else:
     atts = {}
 
 if args.output_values:
+
     vals = to_values(comps)
-
-#    for k, v in vals.items():
-#        print(
-#            "%-45s: %s" % (k, v)
-#        )
-#    sys.exit(0)
-
 
     for c in vals:
 
@@ -132,7 +133,67 @@ if args.output_values:
 
     sys.exit(0)
 
-ret = to_return(comps, accts, params, atts)
+if args.output_form_values:
+
+    vals = to_values(comps)
+
+    print("ct600:")
+
+    for c in vals:
+
+
+        print()
+        help = "\n  # ".join(textwrap.wrap(c.description, width=75))
+        print("  # " + help)
+
+        if c.value is None:
+            print("  " + str(c.box) + ": ")
+        else:
+            print("  " + str(c.box) + ": " + str(c.value))
+
+    print()
+
+    sys.exit(0)
+
+try:
+    form_values = open(args.form_values, "r").read()
+    form_values = yaml.safe_load(form_values)
+except Exception as e:
+    sys.stderr.write("Could not read form values file: %s\n" % str(e))
+    sys.exit(1)
+
+ret = CorptaxReturn(comps, accts, form_values, params, atts)
+
+rtn = ret.get_return()
+
+utr = rtn.find(".//{%s}Reference" % ct_ns).text
+
+req_params = {
+    "username": params["username"],
+    "password": params["password"],
+    "class": "HMRC-CT-CT600",
+    "gateway-test": params["gateway-test"],
+    "tax-reference": utr,
+    "vendor-id": params["vendor-id"],
+    "software": params["software"],
+    "software-version": params["software-version"],
+    "ir-envelope": rtn.getroot()
+}
+
+if "class" in params:
+    req_params["class"] = params["class"]
+
+if "timestamp" in params:
+    req_params["timestamp"] = datetime.datetime.fromisoformat(
+        params["timestamp"]
+    )
+
+req = GovTalkSubmissionRequest(req_params)
+
+print(req.toprettyxml())
+
+
+sys.exit(0)
 
 utr = ret.find(".//{%s}Reference" % ct_ns).text
 
