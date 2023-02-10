@@ -226,12 +226,17 @@ class CorptaxReturn:
             def __init__(self, id, kind=None):
                 self.kind = kind
                 self.id = id
+
             def present(self, obj):
                 if self.id in obj.form_values["ct600"]:
                     return True
                 return False
+
+            def fetch(self, obj):
+                return obj.form_values["ct600"][self.id]
+
             def get(self, obj):
-                value = obj.form_values["ct600"][self.id]
+                value = self.fetch(obj)
 
                 if self.kind == "yesno":
                     return "Yes" if value else "No"
@@ -249,6 +254,18 @@ class CorptaxReturn:
                     return "%02d" % value
 
                 return value
+
+        class Fixed(Box):
+            def __init__(self, value, kind=None):
+                self.value = value
+                self.kind = kind
+
+            def present(self, obj):
+                return True
+
+            def fetch(self, obj):
+                return self.value
+
 
         mapping = {
             "CompanyInformation": {
@@ -524,9 +541,102 @@ class CorptaxReturn:
                     "CapitalAllowances": Box(755),
                 },
             },
+            "QualifyingExpenditure": {
+                "MachineryAndPlantExpenditure": Box(760),
+                "DesignatedEnvironmentallyFriendlyMachineryAndPlant": Box(765),
+                "MachineryAndPlantLongLife": Box(770),
+                "StructuresAndBuildings": Box(771),
+                "OtherMachineryAndPlant": Box(775),
+            },
+            "LossesDeficitsAndExcess": {
+                "AmountArising": {
+                    "LossesOfTradesUK": {
+                        "Arising": Box(780),
+                        "SurrenderMaximum": Box(785),
+                    },
+                    "LossesOfTradesOutsideUK": Box(790),
+                    "Loans": {
+                        "Arising": Box(795),
+                        "SurrenderMaximum": Box(800),
+                    },
+                    "UKpropertyBusinessLosses": {
+                        "Arising": Box(805),
+                        "SurrenderMaximum": Box(810),
+                    },
+                    "OverseasPropertyBusinessLosses": Box(815),
+                    "MiscLosses": Box(820),
+                    "CapitalLosses": Box(825),
+                    "NonTradingLossesIntangibles": {
+                        "Arising": Box(830),
+                        "SurrenderMaximum": Box(835),
+                    },
+                },
+                "ExcessAmounts": {
+                    "NonTradeCapital": Box(840),
+                    "QualifyingDonations": Box(845),
+                    "ManagementExpenses": {
+                        "Arising": Box(850),
+                        "SurrenderMaximum": Box(855),
+                    },
+                }
+            },
+            "NorthernIrelandInformation": {
+                "NIagainstUK": Box(856),
+                "NIagainstNI": Box(857),
+                "UKagainstNI": Box(858),
+            },
+            "OverpaymentsAndRepayments": {
+                "OwnRepaymentsLowerLimit": Box(860),
+                "RepaymentsForThePeriodCoveredByThisReturn": {
+                    "CorporationTax": Box(865),
+                    "IncomeTax": Box(870),
+                    "RandDTaxCredit": Box(875),
+                    "RandDExpenditureCredit": Box(880),
+                    "CreativeCredit": Box(885),
+                    "LandRemediationCredit": Box(890),
+                    "PayableCapitalAllowancesFirstYearCredit": Box(895),
+                    "Surrender": {
+                        "Amount": Box(900),
+                        "JointNotice": {
+                            "Attached": Box(905, kind="yes"),
+                            "WillFollow": Box(910, kind="yes"),
+                        },
+                        "StopUntilNotice": Box(915),
+                    }
+                },
+                "BankAccountDetails": {
+                    "BankName": Box(920),
+                    "SortCode": Box(925),
+                    "AccountNumber": Box(930),
+                    "AccountName": Box(935),
+                    "BuildingSocReference": Box(940),
+                    
+                },
+                "PaymentToPerson": {
+                    "Recipient": Box(955),
+                    "Address": {
+
+                        # FIXME
+                        "Line": [
+                            Box(960),
+                        ],
+
+                        # FIXME: AdditionalLine
+                        # FIXME: PostCode
+
+                    },
+                    "NomineeReference": Box(965),
+                },
+            },
+            "Declaration": {
+                "AcceptDeclaration": Fixed("yes"),
+                "Name": Box(975),
+                "Status": Box(985),
+            },
         }
 
         def addit(obj, tree):
+
             for key, value in tree.items():
 
                 if type(value) == dict:
@@ -534,16 +644,21 @@ class CorptaxReturn:
                         obj[key] = {}
                     addit(obj[key], value)
 
-                if type(value) == Box:
+                if isinstance(value, Box):
                     if value.present(self):
                         obj[key] = value.get(self)
 
                 if type(value) == list:
                     obj[key] = []
+
                     for elt in value:
-                        obj2 = {}
-                        addit(obj2, elt)
-                        obj[key].append(obj2)
+
+                        if isinstance(elt, Box):
+                            obj[key].append(elt.get(self))
+                        else:
+                            obj2 = {}
+                            addit(obj2, elt)
+                            obj[key].append(obj2)
 
         addit(obj, mapping)
 
