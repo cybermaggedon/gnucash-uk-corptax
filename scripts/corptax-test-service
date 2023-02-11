@@ -305,7 +305,7 @@ class Api:
 
 svc = Api(["localhost:8081", "localhost:8082"])
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 print("Launching service...")
 loop.run_until_complete(svc.run())
 

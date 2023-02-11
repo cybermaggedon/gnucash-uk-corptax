@@ -16,40 +16,6 @@ import datetime
 import textwrap
 import yaml
 
-# Command-line argument parser
-parser = argparse.ArgumentParser(
-    description="Submittion to HMRC Corporation Tax API"
-)
-parser.add_argument('--config', '-c',
-		    default='config.json',
-                    help='Configuration file (default: config.json)')
-parser.add_argument('--accounts', '-a', required=False,
-                    help='Company accounts iXBRL file')
-parser.add_argument('--computations', '--comps', '-t', required=False,
-                    help='Corporation tax computations iXBRL file')
-parser.add_argument('--form-values', '--ct600', '-f', required=False,
-                    help='CT600 form values YAML file')
-parser.add_argument('--attachment', '-m', required=False, action='append',
-                    help='Corporation tax computations iXBRL file')
-parser.add_argument('--output-ct', '-p',
-                    action="store_true", default=False,
-                    help='Just output submission message, without submit step')
-parser.add_argument('--output-values',
-                    action="store_true", default=False,
-                    help='Just output some data values (debug)')
-parser.add_argument('--output-form-values',
-                    action="store_true", default=False,
-                    help='Output CT600 form values from computations')
-parser.add_argument('--submit',
-                    action="store_true", default=False,
-                    help='Submit the CT message')
-parser.add_argument('--data-request',
-                    action="store_true", default=False,
-                    help='Perform a data request for outstanding items')
-
-# Parse arguments
-args = parser.parse_args(sys.argv[1:])
-
 def load_comps(path):
     try:
         return open(path, "rb").read()
@@ -115,49 +81,6 @@ def check_schemas(accts, comps):
         sys.stderr.write("Is it a corporation tax computations file?\n")
         sys.exit(1)
 
-if args.output_values:
-
-    if args.computations is None:
-        raise RuntimeError("Must specify a computations file")
-
-    corptax = load_comps(args.computations)
-    comps = Computations(corptax)
-
-    for c in comps.to_values():
-
-        if c.value is None: continue
-        
-        print(
-            "%-4d %-45s: %s" % (c.box, c.description[:44], str(c.value)[:20])
-        )
-
-    sys.exit(0)
-
-if args.output_form_values:
-
-    if args.computations is None:
-        raise RuntimeError("Must specify a computations file")
-
-    corptax = load_comps(args.computations)
-    comps = Computations(corptax)
-
-    print("ct600:")
-
-    for c in comps.to_values():
-
-        print()
-        help = "\n  # ".join(textwrap.wrap(c.description, width=75))
-        print("  # " + help)
-
-        if c.value is None:
-            print("  " + str(c.box) + ": ")
-        else:
-            print("  " + str(c.box) + ": " + str(c.value))
-
-    print()
-
-    sys.exit(0)
-
 def request_params(params, utr, doc):
 
     req_params = {
@@ -184,7 +107,7 @@ def request_params(params, utr, doc):
 
 def get_govtalk_message(params, utr, doc):
 
-    req_params = request_params(params, utr, rtn.getroot())
+    req_params = request_params(params, utr, doc.getroot())
     return GovTalkSubmissionRequest(req_params)
 
 def get_bundle(args):
@@ -226,19 +149,6 @@ def get_bundle(args):
         atts = {}
 
     return InputBundle(corptax, accts, form_values, params, atts)
-
-if args.output_ct:
-
-    bundle = get_bundle(args)
-
-    rtn = bundle.get_return()
-    utr = str(bundle.form_values["ct600"][3])
-
-    gtm = get_govtalk_message(bundle.params, utr, rtn)
-
-    print(gtm.toprettyxml())
-
-    sys.exit(0)
 
 async def call(req, ep):
 
@@ -331,7 +241,59 @@ async def submit(req, params):
 
     print("Completed.")
 
-if args.submit:
+def output_form_values(args):
+
+    if args.computations is None:
+        raise RuntimeError("Must specify a computations file")
+
+    corptax = load_comps(args.computations)
+    comps = Computations(corptax)
+
+    print("ct600:")
+
+    for c in comps.to_values():
+
+        print()
+        help = "\n  # ".join(textwrap.wrap(c.description, width=75))
+        print("  # " + help)
+
+        if c.value is None:
+            print("  " + str(c.box) + ": ")
+        else:
+            print("  " + str(c.box) + ": " + str(c.value))
+
+    print()
+
+def output_values(args):
+
+    if args.computations is None:
+        raise RuntimeError("Must specify a computations file")
+
+    corptax = load_comps(args.computations)
+    comps = Computations(corptax)
+
+    for c in comps.to_values():
+
+        if c.value is None: continue
+
+        print(
+            "%-4d %-45s: %s" % (
+                c.box, c.description[:44], str(c.value)[:20]
+            )
+        )
+
+def output_ct(args):
+
+    bundle = get_bundle(args)
+
+    rtn = bundle.get_return()
+    utr = str(bundle.form_values["ct600"][3])
+
+    gtm = get_govtalk_message(bundle.params, utr, rtn)
+
+    print(gtm.toprettyxml())
+
+def submit_ct(args):
 
     bundle = get_bundle(args)
 
@@ -345,15 +307,16 @@ if args.submit:
     print("IRmark is", req.get_irmark())
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.run_until_complete(submit(req, bundle.params))
     except Exception as e:
         print("Exception:", str(e))
         raise e
 
-    sys.exit(0)
+# FIXME: Not known to work
+def data_request(args):
 
-if args.data_request:
+    raise RuntimeError("Not implemented")
 
     async def doit():
         req_params = {
@@ -383,7 +346,64 @@ if args.data_request:
         resp = await call(req, params["url"])
         print(resp)
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
     loop.run_until_complete(doit())
 
-    sys.exit(0)
+def main():
+
+    # Command-line argument parser
+    parser = argparse.ArgumentParser(
+        description="Submittion to HMRC Corporation Tax API"
+    )
+    parser.add_argument('--config', '-c',
+                        default='config.json',
+                        help='Configuration file (default: config.json)')
+    parser.add_argument('--accounts', '-a', required=False,
+                        help='Company accounts iXBRL file')
+    parser.add_argument('--computations', '--comps', '-t', required=False,
+                        help='Corporation tax computations iXBRL file')
+    parser.add_argument('--form-values', '--ct600', '-f', required=False,
+                        help='CT600 form values YAML file')
+    parser.add_argument('--attachment', '-m', required=False, action='append',
+                        help='Corporation tax computations iXBRL file')
+    parser.add_argument('--output-ct', '-p',
+                        action="store_true", default=False,
+                        help='Just output CT message, no submission')
+    parser.add_argument('--output-values',
+                        action="store_true", default=False,
+                        help='Just output some data values (debug)')
+    parser.add_argument('--output-form-values',
+                        action="store_true", default=False,
+                        help='Output CT600 form values from computations')
+    parser.add_argument('--submit',
+                        action="store_true", default=False,
+                        help='Submit the CT message')
+    parser.add_argument('--data-request',
+                        action="store_true", default=False,
+                        help='Perform a data request for outstanding items')
+
+    # Parse arguments
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.output_values:
+        output_values(args)
+        sys.exit(0)
+
+    if args.output_form_values:
+        output_form_values(args)
+        sys.exit(0)
+
+    if args.output_ct:
+        output_ct(args)
+        sys.exit(0)
+
+    if args.submit:
+        submit_ct(args)
+        sys.exit(0)
+
+    if args.data_request:
+        data_request(args)
+        sys.exit(0)
+
+main()
+

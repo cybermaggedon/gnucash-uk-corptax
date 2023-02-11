@@ -12,17 +12,61 @@ nsmap = {
 
 ct_ns = "http://www.govtalk.gov.uk/taxation/CT/5"
 
-# Gets a set of values dict from an iXBRL document.
-def get_comps(comps):
-    c = Computations(comps)
-    return c
+class Box:
+    def __init__(self, id, kind=None):
+        self.kind = kind
+        self.id = id
 
-def to_values(comps):
+    def present(self, obj):
+        if self.id in obj.form_values["ct600"]:
 
-    c = get_comps(comps)
+            value = obj.form_values["ct600"][self.id]
+            if value == None:
+                return False
 
-    values = c.values()
-    return values
+            return True
+
+        return False
+
+    def fetch(self, obj):
+        return obj.form_values["ct600"][self.id]
+
+    def get(self, obj):
+        value = self.fetch(obj)
+
+        if self.kind == "yesno":
+            return "yes" if value else "no"
+
+        if self.kind == "money":
+            return "%.2f" % value
+
+        if self.kind == "pounds":
+            return "%.2f" % int(value)
+
+        if self.kind == "yes":
+            return "yes" if value else "FIXME"
+
+        if self.kind == "date":
+            return str(value)
+
+        if self.kind == "year":
+            return str(value)
+
+        if self.kind == "companytype":
+            return "%02d" % value
+
+        return value
+
+class Fixed(Box):
+    def __init__(self, value, kind=None):
+        self.value = value
+        self.kind = kind
+
+    def present(self, obj):
+        return True
+
+    def fetch(self, obj):
+        return self.value
 
 class InputBundle:
 
@@ -70,63 +114,6 @@ class InputBundle:
 
         comp_ixbrl = base64.b64encode(self.comps).decode("utf-8")
         accounts_ixbrl = base64.b64encode(self.accts).decode("utf-8")
-
-        class Box:
-            def __init__(self, id, kind=None):
-                self.kind = kind
-                self.id = id
-
-            def present(self, obj):
-                if self.id in obj.form_values["ct600"]:
-
-                    value = obj.form_values["ct600"][self.id]
-                    if value == None:
-                        return False
-
-                    return True
-
-                return False
-
-            def fetch(self, obj):
-                return obj.form_values["ct600"][self.id]
-
-            def get(self, obj):
-                value = self.fetch(obj)
-
-                if self.kind == "yesno":
-                    return "yes" if value else "no"
-
-                if self.kind == "money":
-                    return "%.2f" % value
-
-                if self.kind == "pounds":
-                    return "%.2f" % int(value)
-
-                if self.kind == "yes":
-                    return "yes" if value else "FIXME"
-
-                if self.kind == "date":
-                    return str(value)
-
-                if self.kind == "year":
-                    return str(value)
-
-                if self.kind == "companytype":
-                    return "%02d" % value
-
-                return value
-
-        class Fixed(Box):
-            def __init__(self, value, kind=None):
-                self.value = value
-                self.kind = kind
-
-            def present(self, obj):
-                return True
-
-            def fetch(self, obj):
-                return self.value
-
 
         mapping = {
             "CompanyInformation": {
