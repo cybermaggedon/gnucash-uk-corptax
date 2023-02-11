@@ -1,4 +1,6 @@
 
+Deprecated, see https://github.com/cybermaggedon/ct600
+
 # `gnucash-uk-corptax`
 
 ## Introduction
