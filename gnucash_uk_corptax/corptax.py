@@ -182,15 +182,15 @@ class InputBundle:
                 }
             },
             "Turnover": {
-                "Total": Box(145, kind="money"),
+                "Total": Box(145, kind="pounds"),
                 "OtherFinancialConcerns": Box(150, kind="money"),
             },
             "CompanyTaxCalculation": {
                 "Income": {
                     "Trading": {
-                        "Profits": Box(155, kind="money"),
+                        "Profits": Box(155, kind="pounds"),
                         "LossesBroughtForward": Box(160, kind="money"),
-                        "NetProfits": Box(165, kind="money"),
+                        "NetProfits": Box(165, kind="pounds"),
                     },
                     "NonTradingLoanProfitsAndGains": Box(170, kind="money"),
                     "IncomeStatedNet": Box(172, kind="yesno"),
@@ -209,7 +209,7 @@ class InputBundle:
                 },
                 "LossesBroughtForward": Box(225, kind="money"),
                 "NonTradeDeficitsOnLoans": Box(230, kind="money"),
-                "ProfitsBeforeOtherDeductions": Box(235, kind="money"),
+                "ProfitsBeforeOtherDeductions": Box(235, kind="pounds"),
                 "DeductionsAndReliefs": {
                     "UnquotedShares": Box(240, kind="money"),
                     "ManagementExpenses": Box(245, kind="money"),
@@ -225,28 +225,30 @@ class InputBundle:
                     "Total": Box(295, kind="money"),
                 },
                 "ChargesAndReliefs": {
-                    "ProfitsBeforeDonationsAndGroupRelief": Box(300, kind="money"),
+                    "ProfitsBeforeDonationsAndGroupRelief": Box(
+                        300, kind="pounds"
+                    ),
                     "QualifyingDonations": Box(305, kind="money"),
                     "GroupRelief": Box(310, kind="money"),
                     "GroupReliefForCarriedForwardLosses": Box(312, kind="money"),
                 },
-                "ChargeableProfits": Box(315, kind="money"),
+                "ChargeableProfits": Box(315, kind="pounds"),
                 "RingFenceProfitsIncluded": Box(320, kind="money"),
                 "NorthernIrelandProfitsIncluded": Box(325, kind="money"),
                 "CorporationTaxChargeable": {
                     "FinancialYearOne": {
                         "Year": Box(330, kind="year"),
                         "Details": {
-                            "Profit": Box(335, kind="money"),
-                            "TaxRate": Box(340, kind="money"),
+                            "Profit": Box(335, kind="pounds"),
+                            "TaxRate": Box(340, kind="rate"),
                             "Tax": Box(345, kind="money")
                         }
                     },
                     "FinancialYearTwo": {
                         "Year": Box(380, kind="year"),
                         "Details": {
-                            "Profit": Box(385, kind="money"),
-                            "TaxRate": Box(390, kind="money"),
+                            "Profit": Box(385, kind="pounds"),
+                            "TaxRate": Box(390, kind="rate"),
                             "Tax": Box(395, kind="money")
                         }
                     },
@@ -326,15 +328,15 @@ class InputBundle:
             "EnhancedExpenditure": {
                 "SMEclaim": Box(650, kind="yes"),
                 "LargeCompanyClaim": Box(655, kind="yes"),
-                "RandDEnhancedExpenditure": Box(660, kind="money"),
-                "CreativeEnhancedExpenditure": Box(665, kind="money"),
-                "RandDAndCreativeEnhancedExpenditure": Box(670, kind="money"),
-                "SMEclaimAsLargeCompany": Box(675, kind="money"),
-                "VaccineResearch": Box(680, kind="money"),
+                "RandDEnhancedExpenditure": Box(660, kind="pounds"),
+                "CreativeEnhancedExpenditure": Box(665, kind="pounds"),
+                "RandDAndCreativeEnhancedExpenditure": Box(670, kind="pounds"),
+                "SMEclaimAsLargeCompany": Box(675, kind="pounds"),
+                "VaccineResearch": Box(680, kind="pounds"),
             },
-            "LandRemediationEnhancedExpenditure": Box(685, kind="money"),
+            "LandRemediationEnhancedExpenditure": Box(685, kind="pounds"),
             "AllowancesAndCharges": {
-                "AIACapitalAllowancesInc": Box(690, kind="money"),
+                "AIACapitalAllowancesInc": Box(690, kind="pounds"),
                 "MachineryAndPlantSpecialRatePool": {
                     "BalancingCharges": Box(695, kind="money"),
                     "CapitalAllowances": Box(700, kind="money"),
